@@ -110,6 +110,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
                     Intent intentPhotoCamera  = new Intent(HomeActivity.this, EditImageActivity.class);
                     intentPhotoCamera.putExtra("BITMAP_PICK_CAMERA", bitmapPhotoCamera);
                     startActivity(intentPhotoCamera);
+                    System.out.print("hello");
                     break;
 
 
