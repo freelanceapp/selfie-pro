@@ -63,7 +63,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
                 mMyPrecfence.saveString(Constants.INTENT_TYPE, "IntentCamera");
                 Intent cameraIntent = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
                 startActivityForResult(cameraIntent, PICK_CAMERA_REQUEST);
-
+                System.out.print("hello");
                 break;
 
             case R.id.idGalleryLayout:
@@ -111,7 +111,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
                     intentPhotoCamera.putExtra("BITMAP_PICK_CAMERA", bitmapPhotoCamera);
                     startActivity(intentPhotoCamera);
                     System.out.print("Hello Commit Test");
-                     
+
                     break;
 
 
