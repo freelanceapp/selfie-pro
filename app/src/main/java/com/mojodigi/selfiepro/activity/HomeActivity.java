@@ -57,6 +57,7 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View view) {
+        //hello
         switch (view.getId()) {
 
             case R.id.idCameraLayout:
