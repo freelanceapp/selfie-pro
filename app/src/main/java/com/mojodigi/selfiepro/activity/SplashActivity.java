@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.content.ContextCompat;
-import android.util.Log;
 import android.view.WindowManager;
 import android.widget.LinearLayout;
 
@@ -75,11 +74,15 @@ public class SplashActivity extends PermissionsActivity {
         return permissionCheckStatus;
     }
 
+
     @Override
     public void onPermissionsGranted(int requestCode) {
         Utilities.getUtilInstance(SplashActivity.this).showSnackBarLong("Permissions has been Received." ,  mSplashLayout);
-        callHandler();
+        //callHandler();
     }
+
+
+
 
 
     private void callHandler() {
@@ -87,19 +90,18 @@ public class SplashActivity extends PermissionsActivity {
             @Override
             public void run() {
                 try {
-                    if (Utilities.isNetworkConnected(SplashActivity.this)) {
+                    //if (Utilities.isNetworkConnected(SplashActivity.this)) {
                     Intent i = new Intent(SplashActivity.this, HomeActivity.class);
                     startActivity(i);
                     SplashActivity.this.finish();
-                     }
-                    else {
-                    Log.e(TAG, "Please check your internet connection and try again.");
-                    }
+                     //}
+                    //else {
+                    //Log.e(TAG, "Please check your internet connection and try again.");
+                    //}
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
         }, SPLASH_TIME_OUT);
     }
-
 }

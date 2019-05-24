@@ -1,6 +1,8 @@
 package com.mojodigi.selfiepro.adapter;
 
+import android.graphics.Color;
 import android.support.annotation.NonNull;
+import android.support.constraint.ConstraintLayout;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,20 +24,29 @@ public class CollageEditToolsAdapter extends RecyclerView.Adapter<CollageEditToo
 
     private OnCollageEditTollsSelected mOnCollageEditTollsSelected;
 
-
+    private static int mPosition = -1;
 
     public CollageEditToolsAdapter(OnCollageEditTollsSelected onCollageEditTollsSelected) {
 
         mOnCollageEditTollsSelected = onCollageEditTollsSelected;
         mCollageEditToolsList = new ArrayList<>();
 
-        //mCollageEditToolsList.add(new CollageEditToolsModel("Close", R.drawable.ic_close, CollageEditToolsType.CLOSE));
-        mCollageEditToolsList.add(new CollageEditToolsModel("Collage", R.drawable.ic_collage_white, CollageEditToolsType.COLLAGE));
-        mCollageEditToolsList.add(new CollageEditToolsModel("Gallery", R.drawable.ic_image_white, CollageEditToolsType.GALLERY));
-        mCollageEditToolsList.add(new CollageEditToolsModel("Rt Left", R.drawable.ic_undo, CollageEditToolsType.RT_LEFT));
-        mCollageEditToolsList.add(new CollageEditToolsModel("Rt Right", R.drawable.ic_redo, CollageEditToolsType.RT_RIGHT));
-        mCollageEditToolsList.add(new CollageEditToolsModel("Save", R.drawable.ic_save, CollageEditToolsType.SAVE));
-        mCollageEditToolsList.add(new CollageEditToolsModel("Share", R.drawable.ic_share, CollageEditToolsType.SHARE));
+        //mCollageEditToolsList.add(new CollageEditToolsModel("Camera", R.drawable.svg_camera, CollageEditToolsType.CAMERA));
+        //mCollageEditToolsList.add(new CollageEditToolsModel("Gallery", R.drawable.svg_gallery, CollageEditToolsType.GALLERY));
+
+        mCollageEditToolsList.add(new CollageEditToolsModel("Collage", R.drawable.svg_collage, CollageEditToolsType.COLLAGE));
+        mCollageEditToolsList.add(new CollageEditToolsModel("Tools", R.drawable.svg_tools, CollageEditToolsType.TOOLS));
+        mCollageEditToolsList.add(new CollageEditToolsModel("Effects", R.drawable.svg_effects, CollageEditToolsType.EFFECTS));
+
+        //mCollageEditToolsList.add(new CollageEditToolsModel("Frame", R.drawable.svg_frame, CollageEditToolsType.FRAME));
+//       mCollageEditToolsList.add(new CollageEditToolsModel("Crop", R.drawable.svg_crop, CollageEditToolsType.CROP));
+//       mCollageEditToolsList.add(new CollageEditToolsModel("Left", R.drawable.svg_rotate_left, CollageEditToolsType.RT_LEFT));
+//       mCollageEditToolsList.add(new CollageEditToolsModel("Right", R.drawable.svg_rotate_right, CollageEditToolsType.RT_RIGHT));
+//       mCollageEditToolsList.add(new CollageEditToolsModel("Flip", R.drawable.svg_flip, CollageEditToolsType.FLIP));
+
+        mCollageEditToolsList.add(new CollageEditToolsModel("Adjust", R.drawable.svg_adjust, CollageEditToolsType.ADJUST));
+
+        mCollageEditToolsList.add(new CollageEditToolsModel("Edit", R.drawable.svg_send_edit, CollageEditToolsType.EDIT));
 
     }
 
@@ -45,7 +56,7 @@ public class CollageEditToolsAdapter extends RecyclerView.Adapter<CollageEditToo
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.row_collage_edittools, parent, false);
+        final View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.row_collage_edittools, parent, false);
 
         return new ViewHolder(view);
     }
@@ -53,10 +64,21 @@ public class CollageEditToolsAdapter extends RecyclerView.Adapter<CollageEditToo
 
 
     @Override
-    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull final ViewHolder holder, final int position) {
         CollageEditToolsModel item = mCollageEditToolsList.get(position);
+
         holder.mCollageEditToolsText.setText(item.mToolName);
         holder.mCollageEditToolsImgView.setImageResource(item.mToolIcon);
+
+        if(mPosition >=0 && mPosition ==  position){
+            holder.collageEditItemViewLayout.setBackgroundColor(Color.parseColor("#fcf5df"));
+        }
+        else
+        {
+            //holder.collageEditItemViewLayout.setBackgroundColor(Color.parseColor("#000000"));
+            holder.collageEditItemViewLayout.setBackgroundColor(Color.parseColor("#f7d775"));
+        }
+
     }
 
     @Override
@@ -68,24 +90,34 @@ public class CollageEditToolsAdapter extends RecyclerView.Adapter<CollageEditToo
 
     class ViewHolder extends RecyclerView.ViewHolder {
 
+        ConstraintLayout collageEditItemViewLayout;
         ImageView mCollageEditToolsImgView;
         TextView mCollageEditToolsText;
 
         ViewHolder(View itemView) {
             super(itemView);
 
+            collageEditItemViewLayout = itemView.findViewById(R.id.collageEditItemViewLayout);
             mCollageEditToolsImgView = itemView.findViewById(R.id.idCollageEditToolsImgView);
             mCollageEditToolsText = itemView.findViewById(R.id.idCollageEditToolsText);
 
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+
+                    mPosition = getAdapterPosition();
+
+                    notifyDataSetChanged();
+
+                   // Log.e( "mPosition "+mPosition , "position "+getAdapterPosition() );
+
                     mOnCollageEditTollsSelected.onCollageEditTollsSelected(mCollageEditToolsList.get(getLayoutPosition()).mCollageEditToolsType);
+
+
+
                 }
             });
         }
     }
-
-
 }
 

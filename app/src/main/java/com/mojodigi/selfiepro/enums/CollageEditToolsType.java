@@ -2,12 +2,23 @@ package com.mojodigi.selfiepro.enums;
 
 public enum CollageEditToolsType {
 
-    CLOSE,
-    SAVE,
+    CAMERA,
+    GALLERY,
+    COLLAGE,
+    EFFECTS,
+    TEXT,
+    STICKERS,
+    FRAME,
     RT_LEFT,
     RT_RIGHT,
-    COLLAGE,
-    GALLERY,
-    SHARE
-
+    SAVE,
+    TOOLS,
+    CROP,
+    ADJUST,
+    FLIP,
+    SKEW,
+    BRUSH,
+    ERASER,
+    EMOJI,
+    EDIT
 }

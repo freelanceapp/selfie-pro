@@ -1,7 +1,6 @@
 package com.mojodigi.selfiepro.model;
 
 import com.mojodigi.selfiepro.enums.CollageFrameType;
-import com.mojodigi.selfiepro.enums.ToolType;
 
 public class CollageFrameModel {
 
@@ -10,13 +9,17 @@ public class CollageFrameModel {
     public int mCollageFrameIdBig;
     public CollageFrameType mCollageFrameType;
 
+    public CollageFrameModel(String mCollageName, int mCollageFrameIdSmall , CollageFrameType mCollageFrameType) {
+        this.mCollageName = mCollageName;
+        this.mCollageFrameIdSmall = mCollageFrameIdSmall;
+        this.mCollageFrameType = mCollageFrameType;
+    }
     public CollageFrameModel(String mCollageName, int mCollageFrameIdSmall, int mCollageFrameIdBig, CollageFrameType mCollageFrameType) {
         this.mCollageName = mCollageName;
         this.mCollageFrameIdSmall = mCollageFrameIdSmall;
         this.mCollageFrameIdBig = mCollageFrameIdBig;
         this.mCollageFrameType = mCollageFrameType;
     }
-
     public String getmCollageName() {
         return mCollageName;
     }

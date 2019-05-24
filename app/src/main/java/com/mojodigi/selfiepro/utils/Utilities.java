@@ -15,10 +15,10 @@ import android.support.v4.content.ContextCompat;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
 import android.widget.Toast;
+
 import com.mojodigi.selfiepro.R;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -77,7 +77,7 @@ public class Utilities {
         if (view != null && !TextUtils.isEmpty(message)) {
             Snackbar mSnackbar = Snackbar.make(view, message, Snackbar.LENGTH_LONG);
             mSnackbar.setActionTextColor(Color.blue(R.color.white));
-            mSnackbar.getView().setBackgroundColor(ContextCompat.getColor(view.getContext(), R.color.black));
+            mSnackbar.getView().setBackgroundColor(ContextCompat.getColor(view.getContext(), R.color.color_theme));
             mSnackbar.show();
         }
     }
@@ -87,7 +87,7 @@ public class Utilities {
         if (view != null && !TextUtils.isEmpty(message)) {
             Snackbar mSnackbar = Snackbar.make(view, message, Snackbar.LENGTH_SHORT);
             mSnackbar.setActionTextColor(Color.blue(R.color.white));
-            mSnackbar.getView().setBackgroundColor(ContextCompat.getColor(view.getContext(), R.color.black));
+            mSnackbar.getView().setBackgroundColor(ContextCompat.getColor(view.getContext(), R.color.color_theme));
             mSnackbar.show();
 
         }

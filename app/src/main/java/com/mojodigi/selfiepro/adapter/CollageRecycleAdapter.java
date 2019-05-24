@@ -39,16 +39,26 @@ public class CollageRecycleAdapter extends RecyclerView.Adapter<CollageRecycleAd
 
         mCollageFrameList = new ArrayList<>();
 
-        mCollageFrameList.add(new CollageFrameModel("One", R.drawable.collage2_1, R.drawable.collage2_1, CollageFrameType.TWO_ONE));
-        mCollageFrameList.add(new CollageFrameModel("Two", R.drawable.collage2_2, R.drawable.collage2_2,CollageFrameType.TWO_TWO));
-        mCollageFrameList.add(new CollageFrameModel("Three", R.drawable.collage3_1, R.drawable.collage3_1, CollageFrameType.THREE_ONE));
-        mCollageFrameList.add(new CollageFrameModel("Four", R.drawable.collage3_2, R.drawable.collage3_2,CollageFrameType.THREE_TWO));
-        mCollageFrameList.add(new CollageFrameModel("Five", R.drawable.collage3_3, R.drawable.collage3_3, CollageFrameType.THREE_THREE));
-        mCollageFrameList.add(new CollageFrameModel("Six", R.drawable.collage4_1, R.drawable.collage4_1, CollageFrameType.FOUR_ONE));
-        mCollageFrameList.add(new CollageFrameModel("Seven", R.drawable.collage4_2, R.drawable.collage4_2, CollageFrameType.FOUR_TWO));
-        mCollageFrameList.add(new CollageFrameModel("Eight", R.drawable.collage4_3, R.drawable.collage4_3, CollageFrameType.FOUR_THREE));
-        mCollageFrameList.add(new CollageFrameModel("Nine", R.drawable.collage4_4, R.drawable.collage4_4, CollageFrameType.FOUR_FOUR));
-        mCollageFrameList.add(new CollageFrameModel("Ten", R.drawable.collage6_1, R.drawable.collage6_1, CollageFrameType.SIX_ONE));
+        mCollageFrameList.add(new CollageFrameModel("ONE", R.drawable.collage_1_0,   CollageFrameType.ONE_ZERO));
+        mCollageFrameList.add(new CollageFrameModel("TWO", R.drawable.collage_2_1,   CollageFrameType.TWO_ONE));
+        mCollageFrameList.add(new CollageFrameModel("THREE", R.drawable.collage_2_2,  CollageFrameType.TWO_TWO));
+        mCollageFrameList.add(new CollageFrameModel("FOUR", R.drawable.collage_3_1,   CollageFrameType.THREE_ONE));
+        mCollageFrameList.add(new CollageFrameModel("FIVE", R.drawable.collage_3_2,   CollageFrameType.THREE_TWO));
+        mCollageFrameList.add(new CollageFrameModel("SIX", R.drawable.collage_4_1,    CollageFrameType.FOUR_ONE));
+        mCollageFrameList.add(new CollageFrameModel("SEVEN", R.drawable.collage_4_2,   CollageFrameType.FOUR_TWO));
+        mCollageFrameList.add(new CollageFrameModel("EIGHT", R.drawable.collage_4_4,   CollageFrameType.FOUR_FOUR));
+        mCollageFrameList.add(new CollageFrameModel("NINE", R.drawable.collage_6_1,   CollageFrameType.SIX_ONE));
+
+
+        //mCollageFrameList.add(new CollageFrameModel("Ten", R.drawable.collage_3_3,   CollageFrameType.THREE_THREE));
+       // mCollageFrameList.add(new CollageFrameModel("Eleven", R.drawable.collage_4_3,  CollageFrameType.FOUR_THREE));
+
+        /* mCollageFrameList.add(new CollageFrameModel("One", R.drawable.collage_1_0, R.drawable.collage_1_0, CollageFrameType.ONE_ZERO));
+        mCollageFrameList.add(new CollageFrameModel("Seven", R.drawable.collage_4_2, R.drawable.collage4_2, CollageFrameType.FOUR_TWO));
+        mCollageFrameList.add(new CollageFrameModel("Eight", R.drawable.collage_4_3, R.drawable.collage4_3, CollageFrameType.FOUR_THREE));
+        mCollageFrameList.add(new CollageFrameModel("Nine", R.drawable.collage_4_4, R.drawable.collage4_4, CollageFrameType.FOUR_FOUR));
+        mCollageFrameList.add(new CollageFrameModel("Ten", R.drawable.collage_6_1, R.drawable.collage6_1, CollageFrameType.SIX_ONE));
+*/
 
 
     }
@@ -92,12 +102,13 @@ public class CollageRecycleAdapter extends RecyclerView.Adapter<CollageRecycleAd
 
         public  View mItemView;
 
-         public LinearLayout mCollageFrameItemLLayout;
+        public LinearLayout mCollageFrameItemLLayout;
         public ImageView mCollageFrameItemImage;
         public TextView mCollageFrameItemText;
 
         ViewHolder(View itemView) {
             super(itemView);
+
             this.mItemView = itemView;
 
             mCollageFrameItemImage =(ImageView)itemView.findViewById(R.id.idCollageItemViewImage);
@@ -120,7 +131,6 @@ public class CollageRecycleAdapter extends RecyclerView.Adapter<CollageRecycleAd
 
         }
     }
-
 
 }
 

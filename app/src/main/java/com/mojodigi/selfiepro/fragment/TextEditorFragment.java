@@ -122,6 +122,7 @@ public class TextEditorFragment extends DialogFragment {
             @Override
             public void onClick(View view) {
                 mInputMethodManager.hideSoftInputFromWindow(view.getWindowToken(), 0);
+
                 dismiss();
 
                 String inputText = mAddTextEditText.getText().toString();

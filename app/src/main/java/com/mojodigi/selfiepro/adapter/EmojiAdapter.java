@@ -21,9 +21,11 @@ public class EmojiAdapter extends RecyclerView.Adapter<EmojiAdapter.ViewHolder> 
 
 
     public EmojiAdapter(Context context, EmojiListener emojiListener, ArrayList<String> emojisList) {
+
         this.mContext = context;
         this.mEmojiListener = emojiListener;
         this.mEmojisList = emojisList;
+
     }
 
     @Override
@@ -38,16 +40,21 @@ public class EmojiAdapter extends RecyclerView.Adapter<EmojiAdapter.ViewHolder> 
 
         viewHolder.txtEmoji.setText(mEmojisList.get(position));
 
-//        viewHolder.txtEmoji.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                if (mEmojiListener != null) {
-//                    mEmojiListener.onEmojiClick(mEmojisList.get(position));
-//                }
-//
-//            }
-//        });
+
+       /* viewHolder.txtEmoji.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mEmojiListener != null) {
+                    mEmojiListener.onEmojiClick(mEmojisList.get(position));
+                }
+            }
+        });*/
+
+
+
+
     }
+
 
     @Override
     public int getItemCount() {
@@ -60,6 +67,7 @@ public class EmojiAdapter extends RecyclerView.Adapter<EmojiAdapter.ViewHolder> 
 
         ViewHolder(View itemView) {
             super(itemView);
+
             this.mItemView = itemView;
 
             txtEmoji = itemView.findViewById(R.id.txtEmoji);
@@ -67,12 +75,13 @@ public class EmojiAdapter extends RecyclerView.Adapter<EmojiAdapter.ViewHolder> 
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+
                     if (mEmojiListener != null) {
                         mEmojiListener.onEmojiClick(mEmojisList.get(getLayoutPosition()));
                     }
-
                 }
             });
+
         }
     }
 }

@@ -5,158 +5,260 @@
     android:id="@+id/rootView"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/skyblue_light"
     app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
+    <RelativeLayout
+        android:id="@+id/editImageRootView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical" >
 
-    <android.support.constraint.Guideline
-        android:id="@+id/guideline"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        app:layout_constraintGuide_end="?attr/actionBarSize" />
+        <!-- <android.support.constraint.Guideline
+             android:id="@+id/guideline"
+             android:layout_width="wrap_content"
+             android:layout_height="wrap_content"
+             android:orientation="horizontal"
+             app:layout_constraintGuide_end="?attr/actionBarSize"
+             />-->
 
+        <RelativeLayout
+            android:id="@+id/editImagetoolbarLayout"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/dp60"
+            android:layout_alignParentTop="true"
+            >
 
-    <ja.burhanrashid52.photoeditor.PhotoEditorView
-        android:id="@+id/photoEditorView"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        app:layout_constraintBottom_toTopOf="@+id/rvConstraintTools"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:photo_src="@drawable/frame2_1"
-        android:visibility="visible" />
-
-
-
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/rvConstraintTools"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:background="@android:color/black"
-        android:orientation="horizontal"
-        android:paddingBottom="4dp"
-        android:paddingTop="4dp"
-        app:layoutManager="android.support.v7.widget.LinearLayoutManager"
-        app:layout_constraintBottom_toTopOf="@+id/guideline"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        />
-
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/rvFilterView"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:background="@android:color/black"
-        android:orientation="horizontal"
-        app:layoutManager="android.support.v7.widget.LinearLayoutManager"
-        app:layout_constraintBottom_toBottomOf="@+id/rvConstraintTools"
-        app:layout_constraintStart_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/rvConstraintTools"
-        />
+           <!-- <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:background="@color/color_theme"
+                android:weightSum="100">
 
 
-    <ImageView
-        android:id="@+id/imgClose"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginLeft="8dp"
-        android:src="@drawable/ic_close"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/guideline" />
+                <LinearLayout
+                    android:layout_weight="20"
+                    android:id="@+id/idEditImgBackLLayout"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="left|center"
+                    android:orientation="vertical"
+                    android:background="@drawable/custom_ripple"
+                    >
 
-    <ImageView
-        android:id="@+id/imgCollage"
-        android:layout_width="34dp"
-        android:layout_height="32dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginLeft="8dp"
-        android:background="@android:color/transparent"
-        android:padding="@dimen/dp4"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintRight_toLeftOf="@+id/imgGallery"
-        app:layout_constraintStart_toEndOf="@+id/imgClose"
-        app:layout_constraintTop_toBottomOf="@+id/guideline"
-        app:srcCompat="@android:drawable/ic_dialog_dialer" />
+                    <ImageView
+                        android:id="@+id/backEditImage"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:paddingTop="@dimen/dp5"
+                        android:paddingBottom="@dimen/dp5"
+                        android:paddingRight="@dimen/dp40"
+                        android:paddingLeft="@dimen/dp10"
+                        app:srcCompat="@drawable/svg_back"
+                        tools:ignore="VectorDrawableCompat" />
+                </LinearLayout>
 
-
-    <ImageView
-        android:id="@+id/imgGallery"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:srcCompat="@android:drawable/ic_menu_gallery"
-        android:layout_marginStart="8dp"
-        android:layout_marginLeft="8dp"
-        android:background="@android:color/transparent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintRight_toLeftOf="@+id/imgCamera"
-        app:layout_constraintStart_toEndOf="@+id/imgCollage"
-        app:layout_constraintTop_toBottomOf="@+id/guideline"
-        />
-
-    <ImageView
-        android:id="@+id/imgCamera"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="@android:color/transparent"
-        android:layout_marginStart="8dp"
-        android:layout_marginLeft="8dp"
-        app:srcCompat="@android:drawable/ic_menu_camera"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toEndOf="@id/imgGallery"
-        app:layout_constraintTop_toBottomOf="@+id/guideline"
-         />
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="right|center"
+                    android:layout_weight="15"
+                    android:orientation="vertical"/>
 
 
-    <TextView
-        android:id="@+id/txtCurrentTool"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:singleLine="true"
-        android:text="@string/app_name"
-        android:textColor="@android:color/white"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/imgUndo"
-        app:layout_constraintStart_toEndOf="@+id/imgCamera"
-        app:layout_constraintTop_toBottomOf="@+id/guideline"
-        />
+                <LinearLayout
+                    android:id="@+id/idEditImgUndoLayout"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="right|center"
+                    android:layout_weight="15"
+                    android:background="@drawable/custom_ripple"
+                    android:orientation="vertical">
 
-    <ImageView
-        android:id="@+id/imgUndo"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="@android:color/transparent"
-        android:src="@drawable/ic_undo"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/imgRedo"
-        app:layout_constraintStart_toEndOf="@+id/txtCurrentTool"
-        app:layout_constraintTop_toBottomOf="@+id/guideline"/>
+                    <ImageView
+                        android:id="@+id/imgUndo"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:srcCompat="@drawable/ic_undo"
+                        tools:ignore="VectorDrawableCompat"
+                        />
 
-    <ImageView
-        android:id="@+id/imgRedo"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="@android:color/transparent"
-        android:src="@drawable/ic_redo"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/imgSave"
-        app:layout_constraintStart_toEndOf="@+id/imgUndo"
-        app:layout_constraintTop_toBottomOf="@+id/guideline"/>
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:text="Undo"
+                        android:textColor="@color/color_icon"
+                        android:textStyle="bold" />
+                </LinearLayout>
+                <LinearLayout
+                    android:id="@+id/idEditImgRedoLayout"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="right|center"
+                    android:layout_weight="15"
+                    android:background="@drawable/custom_ripple"
+                    android:orientation="vertical">
 
-    <ImageView
-        android:id="@+id/imgSave"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="16dp"
-        android:layout_marginRight="16dp"
-        android:src="@drawable/ic_save"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintRight_toRightOf="@+id/imgRedo"
-        app:layout_constraintTop_toBottomOf="@+id/guideline"
-        app:layout_constraintVertical_bias="0.478" />
+                    <ImageView
+                        android:id="@+id/imgRedo"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:srcCompat="@drawable/ic_redo"
+                        tools:ignore="VectorDrawableCompat" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:text="Redo"
+                        android:textColor="@color/color_icon"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="right|center"
+                    android:layout_weight="10"
+                    android:orientation="vertical"/>
+
+
+                <LinearLayout
+                    android:id="@+id/idEditImgSaveLayout"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="right|center"
+                    android:layout_weight="25"
+                    android:orientation="vertical"
+                    android:background="@drawable/custom_ripple"
+                    android:visibility="visible" >
+
+                    <ImageView
+                        android:layout_marginTop="@dimen/dp10"
+                        android:id="@+id/imgSave"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/dp25"
+                        app:srcCompat="@drawable/svg_save"
+                        tools:ignore="VectorDrawableCompat" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:text="Save"
+                        android:textColor="@color/color_icon"
+                        android:visibility="gone"
+                        />
+                </LinearLayout>
+
+
+
+
+
+
+            </LinearLayout>-->
+
+           <include
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingLeft="@dimen/dp1"
+                android:paddingRight="@dimen/dp1"
+                layout="@layout/toolbar_edit_image_layout"/>
+        </RelativeLayout>
+
+
+        <RelativeLayout
+            android:id="@+id/idEditMainRLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/dp7"
+            android:layout_above="@+id/editImageSubRecyclerLayout"
+            android:layout_below="@+id/editImagetoolbarLayout"
+            >
+            <ja.burhanrashid52.photoeditor.PhotoEditorView
+                android:id="@+id/photoEditorView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:visibility="visible"
+                android:scaleType="fitXY"
+                android:layout_centerInParent="true" />
+
+            <ImageView
+                android:id="@+id/idMainFrameImageView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_alignParentStart="true"
+                android:layout_alignParentTop="true"
+                android:layout_marginStart="0dp"
+                android:layout_marginTop="0dp"
+                android:scaleType="fitXY"
+                android:visibility="gone"/>
+
+        </RelativeLayout>
+
+
+
+        <LinearLayout
+            android:id="@+id/editImageSubRecyclerLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_above="@+id/editImageBootomLayout"
+            android:orientation="vertical"
+            android:background="@color/white"
+            android:visibility="gone">
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/stickersListRecycleView"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:paddingLeft="@dimen/dp1"
+            android:paddingRight="@dimen/dp1"
+            android:background="@color/color_selected"
+            android:orientation="horizontal"
+            app:layoutManager="android.support.v7.widget.LinearLayoutManager"
+            android:visibility="visible"
+            />
+        </LinearLayout>
+
+
+
+        <LinearLayout
+            android:id="@+id/editImageBootomLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:orientation="vertical"
+            >
+
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/rvConstraintTools"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingLeft="@dimen/dp1"
+                android:paddingRight="@dimen/dp1"
+                android:background="@color/color_theme"
+                android:orientation="horizontal"
+                app:layoutManager="android.support.v7.widget.LinearLayoutManager"
+                android:visibility="visible"
+                />
+
+
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/rvFilterView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingLeft="@dimen/dp1"
+                android:paddingRight="@dimen/dp1"
+                android:background="@color/color_selected"
+                android:orientation="horizontal"
+                app:layoutManager="android.support.v7.widget.LinearLayoutManager"
+                app:layout_constraintTop_toTopOf="@+id/rvConstraintTools"
+                android:visibility="gone"
+                />
+        </LinearLayout>
+
+    </RelativeLayout>
+
 
 </android.support.constraint.ConstraintLayout>

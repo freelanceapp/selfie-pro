@@ -1,6 +1,6 @@
 package com.mojodigi.selfiepro.model;
 
-import com.mojodigi.selfiepro.enums.ToolType;
+import com.mojodigi.selfiepro.tools.ToolType;
 
 public class ToolModel {
 

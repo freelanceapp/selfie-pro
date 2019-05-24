@@ -1,36 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.constraint.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/imageEditItemViewLayout"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:layout_marginLeft="@dimen/dp8"
+    android:layout_marginLeft="@dimen/dp14"
     android:layout_marginTop="@dimen/dp2"
-    android:layout_marginRight="@dimen/dp8"
+    android:layout_marginRight="@dimen/dp14"
     android:layout_marginBottom="@dimen/dp2"
     android:padding="4dp"
-    tools:background="@android:color/black">
+    tools:background="@color/color_theme">
 
 
     <ImageView
-        android:id="@+id/imgToolIcon"
-        android:layout_width="@dimen/dp30"
-        android:layout_height="@dimen/dp30"
+        android:id="@+id/imageEditIcon"
+        android:layout_width="@dimen/dp25"
+        android:layout_height="@dimen/dp25"
         android:layout_margin="4dp"
-        android:layout_marginBottom="8dp"
+        android:layout_marginBottom="5dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        tools:src="@drawable/ic_brush" />
+        tools:src="@drawable/svg_tools"
+        tools:ignore="MissingConstraints" />
 
     <TextView
-        android:id="@+id/txtTool"
+        android:id="@+id/imageEditText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:textColor="@android:color/white"
+        android:layout_marginTop="3dp"
+        android:textColor="@color/color_icon"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imgToolIcon"
-        tools:text="@string/label_brush" />
+        app:layout_constraintTop_toBottomOf="@+id/imageEditIcon"
+        android:textSize="@dimen/dp9"
+        tools:text="@string/label_brush"
+        android:textStyle="bold"/>
 
 </android.support.constraint.ConstraintLayout>
