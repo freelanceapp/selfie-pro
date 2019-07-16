@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/editGalleryRootView"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".gallery.GallerySelectedActivity">
+
+    <LinearLayout
+        android:id="@+id/toolbarGalleryLayout"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dp60"
+        android:layout_alignParentTop="true"
+        android:orientation="horizontal">
+
+        <include
+            layout="@layout/toolbar_gallery_layout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingLeft="@dimen/dp1"
+            android:paddingRight="@dimen/dp1" />
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:id="@+id/idGalleryImageLLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@+id/galleryRecyclerLayout"
+        android:layout_below="@+id/toolbarGalleryLayout"
+        android:background="@color/white"
+        android:padding="@dimen/dp7">
+
+        <RelativeLayout
+            android:id="@+id/idGalleryRLayout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <FrameLayout
+                android:id="@+id/galleryframeShape"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="@dimen/selected_border_size">
+
+                <ImageView
+                    android:id="@+id/gallerySelectedImageShape"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@color/color_placeholder"
+                    android:scaleType="centerInside"
+                    android:layout_gravity="center"
+                    android:src="@drawable/svg_gallery_place_holder_48" />
+            </FrameLayout>
+
+
+           <!-- <ImageView
+                android:id="@+id/idMainGalleryFrameImage"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_alignParentStart="true"
+                android:layout_alignParentTop="true"
+                android:scaleType="fitXY" />-->
+        </RelativeLayout>
+    </LinearLayout>
+
+
+
+
+
+    <LinearLayout
+        android:id="@+id/galleryRecyclerLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/galleryBootomLayout"
+        android:background="@color/white"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/idGalleryListRecycleView"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:background="@color/color_selected"
+            android:orientation="horizontal"
+            android:paddingLeft="@dimen/dp1"
+            android:paddingRight="@dimen/dp1"
+            android:visibility="gone"
+            app:layoutManager="android.support.v7.widget.LinearLayoutManager" />
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/galleryFilterView"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:background="@color/color_selected"
+            android:orientation="horizontal"
+            android:paddingLeft="@dimen/dp1"
+            android:paddingRight="@dimen/dp1"
+            android:visibility="gone"
+            app:layoutManager="android.support.v7.widget.LinearLayoutManager" />
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/imageEffectsThumbnails"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:background="@color/color_selected"
+            android:orientation="horizontal"
+            android:paddingLeft="@dimen/dp1"
+            android:paddingRight="@dimen/dp1"
+            android:visibility="gone"
+            app:layoutManager="android.support.v7.widget.LinearLayoutManager" />
+
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/toolsRecyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:background="@color/color_selected"
+            android:orientation="horizontal"
+            android:paddingLeft="@dimen/dp1"
+            android:paddingRight="@dimen/dp1"
+            android:visibility="gone"
+            app:layoutManager="android.support.v7.widget.LinearLayoutManager" />
+
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/idGalleryFrameRecycleView"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:background="@color/color_selected"
+            android:orientation="horizontal"
+            android:paddingLeft="@dimen/dp1"
+            android:paddingRight="@dimen/dp1"
+            android:visibility="gone"
+            app:layoutManager="android.support.v7.widget.LinearLayoutManager" />
+        <LinearLayout
+            android:id="@+id/galleryEffectsSeekbarLLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone" >
+            <include
+                layout="@layout/adjust_gallery_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                />
+        </LinearLayout>
+
+
+
+
+
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:id="@+id/galleryBootomLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true">
+
+        <include
+            layout="@layout/gallery_edittools_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingLeft="@dimen/dp1"
+            android:paddingTop="@dimen/dp10"
+            android:paddingRight="@dimen/dp1"
+            android:paddingBottom="@dimen/dp10" />
+    </LinearLayout>
+
+
+</RelativeLayout>

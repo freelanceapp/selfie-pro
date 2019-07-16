@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/stickerRecyclerItemLayout"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginLeft="@dimen/dp5"
+    android:layout_marginTop="@dimen/dp2"
+    android:layout_marginRight="@dimen/dp5"
+    android:layout_marginBottom="@dimen/dp2"
+    android:paddingLeft="2dp"
+    android:paddingTop="2dp"
+    android:paddingRight="2dp"
+    android:paddingBottom="3dp"
+    tools:background="@color/color_selected">
+
+
+    <ImageView
+        android:id="@+id/stickerRecyclerImgView"
+        android:layout_width="@dimen/dp25"
+        android:layout_height="@dimen/dp25"
+        android:layout_margin="4dp"
+        android:layout_marginBottom="5dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:src="@drawable/svg_stickers"
+        tools:ignore="MissingConstraints" />
+
+    <TextView
+        android:id="@+id/stickerRecyclerText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:textColor="@color/color_icon"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/stickerRecyclerImgView"
+        android:textSize="@dimen/dp9"
+        tools:text="@string/label_sticker"
+        android:textStyle="bold"/>
+
+</android.support.constraint.ConstraintLayout>
