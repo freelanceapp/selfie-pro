@@ -1,210 +1,218 @@
 <?xml version="1.0" encoding="utf-8"?>
-    <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        xmlns:tools="http://schemas.android.com/tools"
-        android:id="@+id/editCameraRootView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        tools:context=".camera.CameraActivity">
-
-        <LinearLayout
-            android:id="@+id/toolbarCameraLayout"
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/dp60"
-            android:layout_alignParentTop="true"
-            android:orientation="horizontal">
-
-            <include
-                layout="@layout/toolbar_camera_layout"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:paddingLeft="@dimen/dp1"
-                android:paddingRight="@dimen/dp1" />
-        </LinearLayout>
-
-        <!--<LinearLayout
-            android:id="@+id/idCameraImageLLayout"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_above="@+id/cameraRecyclerLayout"
-            android:layout_below="@+id/toolbarCameraLayout"
-            android:background="@color/white"
-            android:padding="@dimen/dp7">
-
-            <RelativeLayout
-                android:id="@+id/idCameraRLayout"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <FrameLayout
-                    android:id="@+id/cameraframeShape"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:padding="@dimen/selected_border_size">
-
-                    <ImageView
-                        android:id="@+id/cameraSelectedImageShape"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:background="@color/color_placeholder"
-                        android:scaleType="center"
-                        android:layout_gravity="center"
-                        android:src="@drawable/svg_gallery_place_holder_48" />
-                </FrameLayout>
-
-
-                &lt;!&ndash;<ImageView
-                    android:id="@+id/idMainCameraFrameImage"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_alignParentStart="true"
-                    android:layout_alignParentTop="true"
-                    android:scaleType="fitXY"
-                    android:visibility="gone"/>&ndash;&gt;
-
-            </RelativeLayout>
-        </LinearLayout>-->
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/editCameraRootView"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".camera.CameraActivity">
 
     <LinearLayout
-        android:id="@+id/idCameraImageLLayout"
+        android:id="@+id/toolbarCameraLayout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_above="@+id/cameraRecyclerLayout"
+        android:layout_height="@dimen/dp55"
+        android:layout_alignParentTop="true"
+        android:orientation="horizontal">
+
+        <include
+            layout="@layout/toolbar_camera_layout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingLeft="@dimen/dp1"
+            android:paddingRight="@dimen/dp1" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/blankCameraLayoutTop"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dp50"
         android:layout_below="@+id/toolbarCameraLayout"
-        android:background="@color/white"
-        android:padding="@dimen/dp7">
+        android:orientation="vertical"
+        android:visibility="visible"
+        android:background="@color/white">
 
         <RelativeLayout
-            android:id="@+id/idCameraRLayout"
+            android:id="@+id/addhoster"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true">
 
-            <FrameLayout
-                android:id="@+id/cameraFrameShape"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                >
+            <RelativeLayout
+                android:id="@+id/adMobView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
 
-                <ImageView
-                    android:id="@+id/cameraSelectedImageShape"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:scaleType="centerInside"
-                    android:layout_gravity="center"
-                    android:src="@drawable/svg_gallery_place_holder_48" />
-            </FrameLayout>
-
-           <!-- <ImageView
-                android:id="@+id/idMainCameraFrameImage"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_alignParentStart="true"
-                android:layout_alignParentTop="true"
-                android:scaleType="fitXY" />-->
-
+            <LinearLayout
+                android:id="@+id/banner_container"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone" />
         </RelativeLayout>
     </LinearLayout>
 
 
 
 
+    <LinearLayout
+        android:id="@+id/idCameraImageLLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@+id/blankCameraLayoutBottom"
+        android:layout_below="@+id/blankCameraLayoutTop"
+        android:background="@color/white"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:paddingLeft="@dimen/dp5"
+        android:paddingRight="@dimen/dp5"
+        android:paddingTop="@dimen/dp2"
+        android:paddingBottom="@dimen/dp2" >
+
+        <RelativeLayout
+            android:id="@+id/cameraSelectedImageRLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:background="@color/white"
+            android:visibility="visible"
+            >
+
+
+            <com.github.chrisbanes.photoview.PhotoView
+                android:id="@+id/cameraSelectedImageShape"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="fitCenter"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:src="@drawable/collage_4_4"
+                android:background="@color/white"
+                />
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/adjustCameraRLayout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:background="@color/white"
+            android:visibility="gone">
+            <RelativeLayout
+                android:id="@+id/adjustCameraPhotoRLayout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:background="@color/white"
+                android:visibility="visible"
+                >
+                <com.github.chrisbanes.photoview.PhotoView
+                    android:id="@+id/adjustCameraPhotoView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:scaleType="fitXY"
+                    android:gravity="center"
+                    android:layout_gravity="center"
+                    android:src="@drawable/collage_4_4"
+                    android:background="@color/white"
+                    />
+            </RelativeLayout>
+        </RelativeLayout>
+
+    </LinearLayout>
+
+
+
+
+
+
+
 
     <LinearLayout
-            android:id="@+id/cameraRecyclerLayout"
+        android:id="@+id/blankCameraLayoutBottom"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dp55"
+        android:layout_above="@+id/cameraSubToolsLayout"
+        android:background="@color/white"
+        android:orientation="vertical"
+        android:visibility="visible"/>
+
+
+    <LinearLayout
+        android:id="@+id/cameraSubToolsLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/cameraBootomLayout"
+        android:background="@color/white"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:id="@+id/cameraEffectsLLayout"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_above="@+id/cameraBootomLayout"
-            android:background="@color/white"
-            android:orientation="vertical"
-            android:visibility="gone">
-
-            <android.support.v7.widget.RecyclerView
-                android:id="@+id/idCameraListRecycleView"
+            android:layout_height="@dimen/dp55"
+            android:paddingLeft="@dimen/dp4"
+            android:paddingRight="@dimen/dp4"
+            android:visibility="gone"
+            android:background="@color/color_selected" >
+            <com.mojodigi.selfiepro.filters.NonSwipeableViewPager
+                android:id="@+id/filters_viewpager"
                 android:layout_width="match_parent"
-                android:layout_height="50dp"
+                android:layout_height="match_parent"
                 android:background="@color/color_selected"
-                android:orientation="horizontal"
-                android:paddingLeft="@dimen/dp1"
-                android:paddingRight="@dimen/dp1"
-                android:visibility="gone"
-                app:layoutManager="android.support.v7.widget.LinearLayoutManager" />
-
-            <android.support.v7.widget.RecyclerView
-                android:id="@+id/cameraFilterView"
-                android:layout_width="match_parent"
-                android:layout_height="50dp"
-                android:background="@color/color_selected"
-                android:orientation="horizontal"
-                android:paddingLeft="@dimen/dp1"
-                android:paddingRight="@dimen/dp1"
-                android:visibility="gone"
-                app:layoutManager="android.support.v7.widget.LinearLayoutManager" />
-
-            <android.support.v7.widget.RecyclerView
-                android:id="@+id/imageEffectsThumbnails"
-                android:layout_width="match_parent"
-                android:layout_height="50dp"
-                android:background="@color/color_selected"
-                android:orientation="horizontal"
-                android:paddingLeft="@dimen/dp1"
-                android:paddingRight="@dimen/dp1"
-                android:visibility="gone"
-                app:layoutManager="android.support.v7.widget.LinearLayoutManager" />
-
-
-            <android.support.v7.widget.RecyclerView
-                android:id="@+id/toolsRecyclerView"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@color/color_selected"
-                android:orientation="horizontal"
-                android:paddingLeft="@dimen/dp1"
-                android:paddingRight="@dimen/dp1"
-                android:visibility="gone"
-                app:layoutManager="android.support.v7.widget.LinearLayoutManager" />
-
-
-            <android.support.v7.widget.RecyclerView
-                android:id="@+id/idCameraFrameRecycleView"
-                android:layout_width="match_parent"
-                android:layout_height="50dp"
-                android:background="@color/color_selected"
-                android:orientation="horizontal"
-                android:paddingLeft="@dimen/dp1"
-                android:paddingRight="@dimen/dp1"
-                android:visibility="gone"
-                app:layoutManager="android.support.v7.widget.LinearLayoutManager" />
-            <LinearLayout
-                android:id="@+id/cameraEffectsSeekbarLLayout"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:visibility="gone" >
-                <include
-                    layout="@layout/adjust_camera_layout"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    />
-            </LinearLayout>
+                app:layout_behavior="@string/appbar_scrolling_view_behavior" />
         </LinearLayout>
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/cameraSubToolsRecycler"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/dp55"
+            android:background="@color/color_selected"
+            android:orientation="horizontal"
+            android:paddingLeft="@dimen/dp1"
+            android:paddingRight="@dimen/dp1"
+            android:visibility="gone"
+            app:layoutManager="android.support.v7.widget.LinearLayoutManager" />
 
 
         <LinearLayout
-            android:id="@+id/cameraBootomLayout"
+            android:id="@+id/cameraAdjustSeekbarLLayout"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true">
-
+            android:layout_height="@dimen/dp55"
+            android:paddingBottom="@dimen/dp3"
+            android:background="@color/color_selected"
+            android:visibility="gone" >
             <include
-                layout="@layout/camera_edittools_layout"
+                layout="@layout/adjust_camera_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingLeft="@dimen/dp1"
-                android:paddingTop="@dimen/dp10"
-                android:paddingRight="@dimen/dp1"
-                android:paddingBottom="@dimen/dp10" />
+                />
         </LinearLayout>
+    </LinearLayout>
 
 
-    </RelativeLayout>
+
+
+
+
+
+    <LinearLayout
+        android:id="@+id/cameraBootomLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true">
+
+        <include
+            layout="@layout/camera_edittools_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingLeft="@dimen/dp1"
+            android:paddingTop="@dimen/dp10"
+            android:paddingRight="@dimen/dp1"
+            android:paddingBottom="@dimen/dp10" />
+    </LinearLayout>
+
+
+</RelativeLayout>
 

@@ -31,15 +31,17 @@ public class StickersListRecyclerAdapter extends RecyclerView.Adapter<StickersLi
         mOnStickersRecyclerSelected = onCollageEditTollsSelected;
         stickersRecyclerModelList = new ArrayList<>();
 
-        stickersRecyclerModelList.add(new StickersRecyclerModel("Trendy", R.drawable.sticker_1, StickersRecyclerType.STICKER_ONE));
-        stickersRecyclerModelList.add(new StickersRecyclerModel("Minions", R.drawable.sticker_28, StickersRecyclerType.STICKER_TWO));
-        stickersRecyclerModelList.add(new StickersRecyclerModel("Comic", R.drawable.sticker_39, StickersRecyclerType.STICKER_THREE));
-        stickersRecyclerModelList.add(new StickersRecyclerModel("Couple", R.drawable.sticker_52, StickersRecyclerType.STICKER_FOUR));
-        stickersRecyclerModelList.add(new StickersRecyclerModel("Kitty", R.drawable.sticker_21, StickersRecyclerType.STICKER_FIVE));
+        stickersRecyclerModelList.add(new StickersRecyclerModel("Couple", R.drawable.loves_1, StickersRecyclerType.STICKER_THREE));
         stickersRecyclerModelList.add(new StickersRecyclerModel("Love", R.drawable.love_1, StickersRecyclerType.STICKER_SIX));
-        stickersRecyclerModelList.add(new StickersRecyclerModel("Donald Duck", R.drawable.duck_1, StickersRecyclerType.STICKER_SEVEN));
-        stickersRecyclerModelList.add(new StickersRecyclerModel("Doraemon", R.drawable.doraemon_1, StickersRecyclerType.STICKER_EIGHT));
-        stickersRecyclerModelList.add(new StickersRecyclerModel("Shin Chan", R.drawable.shin_chan_1, StickersRecyclerType.STICKER_NINE));
+        stickersRecyclerModelList.add(new StickersRecyclerModel("Cute Couple", R.drawable.couple_1, StickersRecyclerType.STICKER_FOUR));
+        stickersRecyclerModelList.add(new StickersRecyclerModel("Minions", R.drawable.minions_1, StickersRecyclerType.STICKER_TWO));
+        stickersRecyclerModelList.add(new StickersRecyclerModel("Trendy", R.drawable.trendy_16, StickersRecyclerType.STICKER_ONE));
+
+        //stickersRecyclerModelList.add(new StickersRecyclerModel("Comic", R.drawable.sticker_39, StickersRecyclerType.STICKER_THREE));
+        //stickersRecyclerModelList.add(new StickersRecyclerModel("Kitty", R.drawable.kitty_1, StickersRecyclerType.STICKER_FIVE));
+        //stickersRecyclerModelList.add(new StickersRecyclerModel("Donald Duck", R.drawable.duck_1, StickersRecyclerType.STICKER_SEVEN));
+        //stickersRecyclerModelList.add(new StickersRecyclerModel("Doraemon", R.drawable.doraemon_1, StickersRecyclerType.STICKER_EIGHT));
+        //stickersRecyclerModelList.add(new StickersRecyclerModel("Shin Chan", R.drawable.shin_chan_1, StickersRecyclerType.STICKER_NINE));
 
     }
 

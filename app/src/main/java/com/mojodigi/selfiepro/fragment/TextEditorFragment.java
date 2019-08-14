@@ -58,7 +58,7 @@ public class TextEditorFragment extends DialogFragment {
 
     //Show dialog with default text input as empty and text color white
     public static TextEditorFragment show(@NonNull AppCompatActivity appCompatActivity) {
-        return show(appCompatActivity,"", ContextCompat.getColor(appCompatActivity, R.color.white));
+        return show(appCompatActivity,"", ContextCompat.getColor(appCompatActivity, R.color.colorAccent));
     }
 
 
@@ -85,6 +85,8 @@ public class TextEditorFragment extends DialogFragment {
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         mAddTextEditText = view.findViewById(R.id.add_text_edit_text);
+        mAddTextEditText.requestFocus();
+
         mInputMethodManager = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
         mAddTextDoneTextView = view.findViewById(R.id.add_text_done_tv);
 

@@ -79,11 +79,11 @@ public class StickerOneFragment  extends BottomSheetDialogFragment {
 
     public class StickerAdapter extends RecyclerView.Adapter<StickerOneFragment.StickerAdapter.ViewHolder> {
 
-        int[] stickerOneList = new int[]{ R.drawable.sticker_01, R.drawable.sticker_1, R.drawable.sticker_02, R.drawable.sticker_2, R.drawable.sticker_03 ,R.drawable.sticker_3,
-                R.drawable.sticker_04,R.drawable.sticker_4, R.drawable.sticker_05,R.drawable.sticker_5, R.drawable.sticker_06, R.drawable.sticker_07,
-                R.drawable.sticker_08, R.drawable.sticker_09, R.drawable.sticker_10, R.drawable.sticker_11,
-                R.drawable.sticker_12, R.drawable.sticker_13, R.drawable.sticker_14, R.drawable.sticker_15 ,
-                R.drawable.sticker_16, R.drawable.sticker_17};
+        int[] stickerOneList = new int[]{ R.drawable.trendy_1,   R.drawable.trendy_2,  R.drawable.trendy_3  ,
+                R.drawable.trendy_4, R.drawable.trendy_5, R.drawable.trendy_6, R.drawable.trendy_7,
+                R.drawable.trendy_8, R.drawable.trendy_9, R.drawable.trendy_10, R.drawable.trendy_11,
+                R.drawable.trendy_12, R.drawable.trendy_13, R.drawable.trendy_14, R.drawable.trendy_15 ,
+                R.drawable.trendy_16, R.drawable.trendy_17 , R.drawable.trendy_18};
 
         @NonNull
         @Override

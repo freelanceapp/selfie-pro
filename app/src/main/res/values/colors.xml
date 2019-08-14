@@ -5,8 +5,13 @@
     <color name="colorAccent">#D81B60</color>
     <color name="bg_gray">#66000000</color>
     <color name="gray">#808080</color>
+
+
+    <color name="deep_pink">#FF1493</color>
+    <color name="hot_pink">#FF69B4</color>
     <color name="gray_dark">#464646</color>
     <color name="color_ripple">#42ffffff</color>
+    <color name="undo_redo_none">#998b5956</color>
 
     <color name="color_selected">#fcf5df</color>
     <color name="color_shape_selected">#732620</color>
@@ -34,5 +39,8 @@
     <color name="zomato_red">#a40100</color>
     <color name="placeholder_background">#222322</color>
     <color name="tickColor">#fff605</color>
+
+    <color name="filter_label_normal">#8A8889</color>
+    <color name="filter_label_selected">#221F20</color>
 
 </resources>

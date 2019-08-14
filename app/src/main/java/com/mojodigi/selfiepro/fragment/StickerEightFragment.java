@@ -80,17 +80,7 @@ public class StickerEightFragment extends BottomSheetDialogFragment {
 
     public class StickerAdapter extends RecyclerView.Adapter<StickerEightFragment.StickerAdapter.ViewHolder> {
 
-        int[] stickerEightList = new int[]{ R.drawable.doraemon_1, R.drawable.doraemon_2 ,
-                R.drawable.doraemon_3, R.drawable.doraemon_4 , R.drawable.doraemon_5, R.drawable.doraemon_6 ,
-                R.drawable.doraemon_7, R.drawable.doraemon_8 , R.drawable.doraemon_9, R.drawable.doraemon_10 ,
-                R.drawable.doraemon_11, R.drawable.doraemon_12 , R.drawable.doraemon_13, R.drawable.doraemon_14 ,
-                R.drawable.doraemon_15, R.drawable.doraemon_16 , R.drawable.doraemon_17, R.drawable.doraemon_18 ,
-                R.drawable.doraemon_19, R.drawable.doraemon_20 , R.drawable.doraemon_21, R.drawable.doraemon_22 ,
-                R.drawable.doraemon_23, R.drawable.doraemon_24 , R.drawable.doraemon_25, R.drawable.doraemon_26 ,
-                R.drawable.doraemon_27, R.drawable.doraemon_28 , R.drawable.doraemon_29, R.drawable.doraemon_30 ,
-                R.drawable.doraemon_31, R.drawable.doraemon_32 , R.drawable.doraemon_33, R.drawable.doraemon_34 ,
-                R.drawable.doraemon_35, R.drawable.doraemon_36 , R.drawable.doraemon_37, R.drawable.doraemon_38 ,
-                R.drawable.doraemon_39, R.drawable.doraemon_40 , R.drawable.doraemon_41, R.drawable.doraemon_42};
+        int[] stickerEightList = new int[]{ R.drawable.love_1};
 
         @NonNull
         @Override

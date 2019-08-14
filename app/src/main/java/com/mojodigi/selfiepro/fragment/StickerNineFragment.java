@@ -80,16 +80,18 @@ public class StickerNineFragment extends BottomSheetDialogFragment {
 
     public class StickerAdapter extends RecyclerView.Adapter<StickerNineFragment.StickerAdapter.ViewHolder> {
 
-        int[] stickerNineList = new int[]{ R.drawable.shin_chan_1, R.drawable.shin_chan_2 ,
-                R.drawable.shin_chan_3, R.drawable.shin_chan_4 , R.drawable.shin_chan_5, R.drawable.shin_chan_6 ,
-                R.drawable.shin_chan_7, R.drawable.shin_chan_8 , R.drawable.shin_chan_9, R.drawable.shin_chan_10 ,
-                R.drawable.shin_chan_11, R.drawable.shin_chan_12 , R.drawable.shin_chan_13, R.drawable.shin_chan_14 ,
-                R.drawable.shin_chan_15, R.drawable.shin_chan_16 , R.drawable.shin_chan_17, R.drawable.shin_chan_18 ,
-                R.drawable.shin_chan_19, R.drawable.shin_chan_20 , R.drawable.shin_chan_21, R.drawable.shin_chan_22 ,
-                R.drawable.shin_chan_23, R.drawable.shin_chan_24 , R.drawable.shin_chan_25, R.drawable.shin_chan_26 ,
-                R.drawable.shin_chan_27, R.drawable.shin_chan_28 , R.drawable.shin_chan_29, R.drawable.shin_chan_30 ,
-                R.drawable.shin_chan_31, R.drawable.shin_chan_32 , R.drawable.shin_chan_33, R.drawable.shin_chan_34 ,
-                R.drawable.shin_chan_35, R.drawable.shin_chan_36 , R.drawable.shin_chan_37, R.drawable.shin_chan_38 };
+        int[] stickerNineList = new int[]{ R.drawable.love_1};
+
+//        int[] stickerNineList = new int[]{ R.drawable.shin_chan_1, R.drawable.shin_chan_2 ,
+//                R.drawable.shin_chan_3, R.drawable.shin_chan_4 , R.drawable.shin_chan_5, R.drawable.shin_chan_6 ,
+//                R.drawable.shin_chan_7, R.drawable.shin_chan_8 , R.drawable.shin_chan_9, R.drawable.shin_chan_10 ,
+//                R.drawable.shin_chan_11, R.drawable.shin_chan_12 , R.drawable.shin_chan_13, R.drawable.shin_chan_14 ,
+//                R.drawable.shin_chan_15, R.drawable.shin_chan_16 , R.drawable.shin_chan_17, R.drawable.shin_chan_18 ,
+//                R.drawable.shin_chan_19, R.drawable.shin_chan_20 , R.drawable.shin_chan_21, R.drawable.shin_chan_22 ,
+//                R.drawable.shin_chan_23, R.drawable.shin_chan_24 , R.drawable.shin_chan_25, R.drawable.shin_chan_26 ,
+//                R.drawable.shin_chan_27, R.drawable.shin_chan_28 , R.drawable.shin_chan_29, R.drawable.shin_chan_30 ,
+//                R.drawable.shin_chan_31, R.drawable.shin_chan_32 , R.drawable.shin_chan_33, R.drawable.shin_chan_34 ,
+//                R.drawable.shin_chan_35, R.drawable.shin_chan_36 , R.drawable.shin_chan_37, R.drawable.shin_chan_38 };
 
         @NonNull
         @Override

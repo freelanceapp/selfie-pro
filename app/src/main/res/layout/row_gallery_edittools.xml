@@ -13,7 +13,6 @@
     android:padding="4dp"
     tools:background="@color/color_theme">
 
-
     <ImageView
         android:id="@+id/galleryEditToolsImgView"
         android:layout_width="@dimen/dp25"

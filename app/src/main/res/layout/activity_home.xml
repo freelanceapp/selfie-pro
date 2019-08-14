@@ -9,15 +9,13 @@
     tools:context=".activity.HomeActivity">
 
 
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:paddingLeft="@dimen/dp40"
         android:paddingRight="@dimen/dp40"
         android:paddingTop="@dimen/dp50"
-        android:paddingBottom="@dimen/dp50"
-        >
+        android:paddingBottom="@dimen/dp50" >
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -27,12 +25,17 @@
             android:background="@drawable/svg_mobile"
             android:weightSum="100"
             >
+
+
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:orientation="vertical"
                 android:layout_weight="20"
-                />
+                android:visibility="invisible"
+                 >
+            </LinearLayout>
 
             <LinearLayout
                 android:id="@+id/cameraLayout"
@@ -63,12 +66,18 @@
                     android:gravity="top|center"
                     android:text="@string/text_camera"/>
             </LinearLayout>
+
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:orientation="vertical"
                 android:layout_weight="2"
                 />
+
+
+
+
             <LinearLayout
                 android:id="@+id/galleryLayout"
                 android:layout_width="match_parent"
@@ -98,12 +107,15 @@
                     android:gravity="top|center"
                     android:text="@string/text_gallery"/>
             </LinearLayout>
+
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:orientation="vertical"
                 android:layout_weight="2"
                 />
+
             <LinearLayout
                 android:id="@+id/collageLayout"
                 android:layout_width="match_parent"
@@ -133,13 +145,20 @@
                     android:text="@string/text_collage"/>
             </LinearLayout>
 
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:orientation="vertical"
                 android:layout_weight="20"
-                />
+                android:visibility="invisible"
+                 >
 
         </LinearLayout>
+
+
+
+        </LinearLayout>
+
     </LinearLayout>
 </LinearLayout>

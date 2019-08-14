@@ -3,8 +3,6 @@
 
     <external-path name="external_files" path="." />
     <root-path name="external_files" path="/storage/." />
-
+    <external-path name="my_images" path="Android/data/com.mojodigi.selfiepro/files/Pictures" />
 
 </paths>
-
-<!-- <external-path name="external_files" path="Android/data/com.mojodigi.selfiepro/"/>-->

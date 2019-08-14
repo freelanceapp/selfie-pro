@@ -5,7 +5,7 @@
     android:background="@color/color_selected">
 
     <ImageView
-        android:id="@+id/thumbnail"
+        android:id="@+id/filter_thumbnail"
         android:layout_width="60dp"
         android:layout_height="wrap_content"
         android:paddingTop="2dp"

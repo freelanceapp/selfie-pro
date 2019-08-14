@@ -12,18 +12,18 @@ import android.view.WindowManager;
 import android.widget.Toast;
 import android.support.design.widget.Snackbar;
 
-
 public class BaseActivity extends AppCompatActivity {
 
-    public static final int READ_WRITE_STORAGE = 2;
-
+    public static final int READ_WRITE_STORAGE = 52;
     private ProgressDialog mProgressDialog;
 
 
     public boolean requestPermission(String permission) {
         boolean isGranted = ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED;
         if (!isGranted) {
-            ActivityCompat.requestPermissions(this,  new String[]{permission},
+            ActivityCompat.requestPermissions(
+                    this,
+                    new String[]{permission},
                     READ_WRITE_STORAGE);
         }
         return isGranted;
@@ -33,27 +33,19 @@ public class BaseActivity extends AppCompatActivity {
 
     }
 
-
-
     public void makeFullScreen() {
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
     }
 
-
-
-
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode) {
-
             case READ_WRITE_STORAGE:
                 isPermissionGranted(grantResults[0] == PackageManager.PERMISSION_GRANTED, permissions[0]);
                 break;
         }
     }
-
-
 
     protected void showLoading(@NonNull String message) {
         mProgressDialog = new ProgressDialog(this);
@@ -63,16 +55,11 @@ public class BaseActivity extends AppCompatActivity {
         mProgressDialog.show();
     }
 
-
-
-
     protected void hideLoading() {
         if (mProgressDialog != null) {
             mProgressDialog.dismiss();
         }
     }
-
-
 
     protected void showSnackbar(@NonNull String message) {
         View view = findViewById(android.R.id.content);
@@ -82,7 +69,4 @@ public class BaseActivity extends AppCompatActivity {
             Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
         }
     }
-
-
-
 }

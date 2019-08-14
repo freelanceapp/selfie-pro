@@ -35,6 +35,7 @@ public class EditingToolsAdapter extends RecyclerView.Adapter<EditingToolsAdapte
          //mToolList.add(new ToolModel("Frame", R.drawable.svg_frame, ToolType.FRAME));
         //mToolList.add(new ToolModel("Background", R.drawable.svg_background, ToolType.BACKGROUND));
          //mToolList.add(new ToolModel("Crop", R.drawable.svg_crop, ToolType.CROP));
+       // mToolList.add(new ToolModel("Back", R.drawable.svg_back, ToolType.BACK));
 
         mToolList.add(new ToolModel("Text", R.drawable.svg_text, ToolType.TEXT));
         mToolList.add(new ToolModel("Stickers", R.drawable.svg_stickers, ToolType.STICKERS));

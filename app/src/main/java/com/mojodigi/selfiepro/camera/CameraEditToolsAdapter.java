@@ -17,8 +17,6 @@ import java.util.List;
 
 public class CameraEditToolsAdapter  extends RecyclerView.Adapter<CameraEditToolsAdapter.ViewHolder> {
 
-
-
     private List<CameraEditToolsModel> mCameraEditToolsList  ;
 
     private OnCameraEditTollsSelected mOnCameraEditTollsSelected;

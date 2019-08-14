@@ -32,7 +32,6 @@ public class GalleryEditToolsAdapter  extends RecyclerView.Adapter<GalleryEditTo
 
         mGalleryEditToolsList.add(new GalleryEditToolsModel("Gallery", R.drawable.svg_gallery, GalleryEditToolsType.GALLERY));
         mGalleryEditToolsList.add(new GalleryEditToolsModel("Tools", R.drawable.svg_tools, GalleryEditToolsType.TOOLS));
-        //mGalleryEditToolsList.add(new GalleryEditToolsModel("Frame", R.drawable.svg_frame, GalleryEditToolsType.FRAME));
         mGalleryEditToolsList.add(new GalleryEditToolsModel("Effects", R.drawable.svg_effects, GalleryEditToolsType.EFFECTS));
         mGalleryEditToolsList.add(new GalleryEditToolsModel("Adjust", R.drawable.svg_adjust, GalleryEditToolsType.ADJUST));
         mGalleryEditToolsList.add(new GalleryEditToolsModel("Edit", R.drawable.svg_send_edit, GalleryEditToolsType.EDIT));

@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">Selfie Pro</string>
 
+    <string name="label_crop">Crop</string>
     <string name="label_brush">Brush</string>
     <string name="label_emoji">Emoji</string>
     <string name="label_sticker">Sticker</string>
@@ -10,11 +11,24 @@
     <string name="text_camera">Camera</string>
     <string name="text_gallery">Gallery</string>
     <string name="text_collage">Collage</string>
+    <string name="loading_msg">Loading...</string>
 
     <string name="runtime_permissions_txt">Please enable ALL permissions from app settings.</string>
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <string name="roboto_medium">sans-serif-medium</string>
+    <string name="filter_normal">Normal</string>
+
+    <string name="tab_filters">FILTERS</string>
+    <string name="tab_edit">EDIT</string>
+
+
+    <string name="InterestialAdds">712543632524943_712548422524464</string>
+    <string name="banneradd">712543632524943_712544799191493</string>
+
+    <string name="AppMetricaId">f1762b2c-3f84-4287-a112-856c0c4caed1</string>
 
 
 </resources>

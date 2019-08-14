@@ -6,49 +6,46 @@
     android:orientation="vertical"
     android:paddingLeft="@dimen/dp10"
     android:paddingRight="@dimen/dp1"
+    android:background="@color/color_selected"
     >
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:paddingBottom="@dimen/dp10"
-        android:paddingTop="@dimen/dp7"
+        android:paddingBottom="@dimen/dp2"
+        android:paddingTop="@dimen/dp4"
         android:weightSum="100">
-
-
         <TextView
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="@dimen/dp22"
             android:drawableLeft="@drawable/svg_brightness"
             android:layout_weight="10"/>
-
         <SeekBar
             android:id="@+id/collageBrightness"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="@dimen/dp22"
             android:layout_weight="90" />
     </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="@dimen/dp30"
         android:orientation="horizontal"
-        android:paddingBottom="@dimen/dp10"
-        android:paddingTop="@dimen/dp7"
+        android:paddingBottom="@dimen/dp4"
+        android:paddingTop="@dimen/dp3"
         android:weightSum="100">
-
 
         <TextView
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="@dimen/dp22"
             android:drawableLeft="@drawable/svg_contrast"
             android:layout_weight="10"/>
 
         <SeekBar
             android:id="@+id/collageContrast"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="@dimen/dp22"
             android:layout_weight="90" />
     </LinearLayout>
 

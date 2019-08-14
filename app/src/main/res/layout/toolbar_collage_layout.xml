@@ -17,8 +17,8 @@
         android:weightSum="100">
 
         <LinearLayout
+            android:id="@+id/backArrowCollageLLayout"
             android:layout_weight="15"
-            android:id="@+id/idCollageEditBackLLayout"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_gravity="left|center"
@@ -39,17 +39,77 @@
 
 
 
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="right|center"
+            android:layout_weight="20"
+            android:orientation="vertical"/>
+
+        <LinearLayout
+            android:id="@+id/undoCollageImageLayout"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="right|center"
+            android:layout_weight="15"
+            android:background="@drawable/custom_ripple"
+            android:orientation="vertical"
+            android:visibility="invisible">
+
+            <ImageView
+                android:id="@+id/undoCollageImageView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_undo"
+                tools:ignore="VectorDrawableCompat"
+                />
+
+            <TextView
+                android:id="@+id/undoCollageTextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="Undo"
+                android:textColor="@color/color_icon"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/redoCollageImageLayout"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="right|center"
+            android:layout_weight="15"
+            android:background="@drawable/custom_ripple"
+            android:orientation="vertical"
+            android:visibility="invisible">
+
+            <ImageView
+                android:id="@+id/redoCollageImageView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_redo"
+                tools:ignore="VectorDrawableCompat" />
+
+            <TextView
+                android:id="@+id/redoCollageTextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="Redo"
+                android:textColor="@color/color_icon"
+                android:textStyle="bold" />
+        </LinearLayout>
 
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_gravity="right|center"
-            android:layout_weight="65"
+            android:layout_weight="15"
             android:orientation="vertical"/>
 
-
         <LinearLayout
-            android:id="@+id/idCollageSaveLayout"
+            android:id="@+id/saveCollageLLayout"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_gravity="right|center"
@@ -60,7 +120,6 @@
 
             <ImageView
                 android:layout_marginTop="@dimen/dp10"
-                android:id="@+id/imgSave"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/dp25"
                 app:srcCompat="@drawable/svg_save"
@@ -76,13 +135,98 @@
                 />
         </LinearLayout>
 
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_gravity="right|center"
-            android:layout_weight="5"
-            android:orientation="vertical"/>
-
-
     </LinearLayout>
 </LinearLayout>
+
+
+
+    <!--
+    <?xml version="1.0" encoding="utf-8"?>
+    <LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dp60"
+        android:background="@color/color_theme"
+        android:paddingTop="@dimen/dp5"
+        android:paddingBottom="@dimen/dp5">
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:weightSum="100">
+
+            <LinearLayout
+                android:layout_weight="15"
+                android:id="@+id/idCollageEditBackLLayout"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="left|center"
+                android:orientation="vertical"
+                android:background="@drawable/custom_ripple"
+                >
+                <ImageView
+                    android:id="@+id/backCollageImage"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="@dimen/dp5"
+                    android:paddingBottom="@dimen/dp5"
+                    android:paddingRight="@dimen/dp20"
+                    android:paddingLeft="@dimen/dp10"
+                    app:srcCompat="@drawable/svg_back"
+                    tools:ignore="VectorDrawableCompat" />
+            </LinearLayout>
+
+
+
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="right|center"
+                android:layout_weight="65"
+                android:orientation="vertical"/>
+
+
+            <LinearLayout
+                android:id="@+id/idCollageSaveLayout"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="right|center"
+                android:layout_weight="15"
+                android:orientation="vertical"
+                android:background="@drawable/custom_ripple"
+                android:visibility="visible" >
+
+                <ImageView
+                    android:layout_marginTop="@dimen/dp10"
+                    android:id="@+id/imgSave"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/dp25"
+                    app:srcCompat="@drawable/svg_save"
+                    tools:ignore="VectorDrawableCompat" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="Save"
+                    android:textColor="@color/color_icon"
+                    android:visibility="gone"
+                    />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="right|center"
+                android:layout_weight="5"
+                android:orientation="vertical"/>
+
+
+        </LinearLayout>
+    </LinearLayout>
+    -->

@@ -80,13 +80,7 @@ public class StickerSevenFragment extends BottomSheetDialogFragment {
 
     public class StickerAdapter extends RecyclerView.Adapter<StickerSevenFragment.StickerAdapter.ViewHolder> {
 
-        int[] stickerSevenList = new int[]{ R.drawable.duck_1, R.drawable.duck_2 ,
-                R.drawable.duck_3, R.drawable.duck_4 , R.drawable.duck_5, R.drawable.duck_6 ,
-                R.drawable.duck_7, R.drawable.duck_8 , R.drawable.duck_9, R.drawable.duck_10 ,
-                R.drawable.duck_11, R.drawable.duck_12 , R.drawable.duck_13, R.drawable.duck_14 ,
-                R.drawable.duck_15, R.drawable.duck_16 , R.drawable.duck_17, R.drawable.duck_18 ,
-                R.drawable.duck_19, R.drawable.duck_20 , R.drawable.duck_21, R.drawable.duck_22 ,
-                R.drawable.duck_23, R.drawable.duck_24 };
+        int[] stickerSevenList = new int[]{ R.drawable.love_1};
 
         @NonNull
         @Override

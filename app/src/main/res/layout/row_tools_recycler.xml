@@ -6,11 +6,11 @@
     android:id="@+id/toolsRecyclerItemLayout"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:layout_marginLeft="@dimen/dp22"
+    android:layout_marginLeft="@dimen/dp15"
     android:layout_marginTop="@dimen/dp2"
-    android:layout_marginRight="@dimen/dp22"
+    android:layout_marginRight="@dimen/dp15"
     android:layout_marginBottom="@dimen/dp2"
-    android:padding="4dp"
+    android:padding="3dp"
     tools:background="@color/color_selected">
 
 
@@ -18,8 +18,7 @@
         android:id="@+id/toolsRecyclerImgView"
         android:layout_width="@dimen/dp25"
         android:layout_height="@dimen/dp25"
-        android:layout_margin="4dp"
-        android:layout_marginBottom="5dp"
+        android:layout_marginTop="3dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         tools:src="@drawable/svg_crop"
@@ -35,7 +34,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/toolsRecyclerImgView"
         android:textSize="@dimen/dp9"
-        tools:text="@string/label_brush"
+        tools:text="@string/label_crop"
         android:textStyle="bold"/>
 
 </android.support.constraint.ConstraintLayout>

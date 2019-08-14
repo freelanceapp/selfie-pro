@@ -80,9 +80,9 @@ public class StickerTwoFragment extends BottomSheetDialogFragment {
 
     public class StickerAdapter extends RecyclerView.Adapter<StickerTwoFragment.StickerAdapter.ViewHolder> {
 
-        int[] stickerTwoList = new int[]{R.drawable.sticker_22, R.drawable.sticker_23, R.drawable.sticker_24 ,R.drawable.sticker_25,
-                R.drawable.sticker_26, R.drawable.sticker_27, R.drawable.sticker_28,R.drawable.sticker_29,
-                R.drawable.sticker_30, R.drawable.sticker_31};
+        int[] stickerTwoList = new int[]{R.drawable.minions_1, R.drawable.minions_2, R.drawable.minions_3 ,R.drawable.minions_4,
+                R.drawable.minions_5, R.drawable.minions_6, R.drawable.minions_7,R.drawable.minions_8,
+                R.drawable.minions_9, R.drawable.minions_10};
 
         @NonNull
         @Override

@@ -1,134 +1,128 @@
 package com.mojodigi.selfiepro.camera;
 
 import android.annotation.SuppressLint;
-import android.content.ActivityNotFoundException;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Paint;
-import android.graphics.Path;
 import android.graphics.drawable.BitmapDrawable;
-import android.media.MediaScannerConnection;
+import android.media.ExifInterface;
 import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Handler;
 import android.provider.MediaStore;
+import android.provider.OpenableColumns;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.KeyEvent;
-import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.view.animation.LinearInterpolator;
 import android.widget.Button;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
-import android.widget.Toast;
+import android.widget.TextView;
 
+import com.github.chrisbanes.photoview.PhotoView;
+import com.mojodigi.selfiepro.AddsUtility.AddConstants;
+import com.mojodigi.selfiepro.AddsUtility.AddMobUtils;
+import com.mojodigi.selfiepro.AddsUtility.SharedPreferenceUtil;
 import com.mojodigi.selfiepro.R;
 import com.mojodigi.selfiepro.activity.EditImageActivity;
-import com.mojodigi.selfiepro.adapter.ToolsRecyclerAdapter;
-import com.mojodigi.selfiepro.collage.ColorFilterGenerator;
-import com.mojodigi.selfiepro.enums.ToolsRecyclerType;
-import com.mojodigi.selfiepro.filterUtils.ThumbnailCallback;
-import com.mojodigi.selfiepro.filterUtils.ThumbnailItem;
-import com.mojodigi.selfiepro.filterUtils.ThumbnailsAdapter;
-import com.mojodigi.selfiepro.filterUtils.ThumbnailsManager;
-import com.mojodigi.selfiepro.interfaces.OnToolsRecyclerSelected;
+import com.mojodigi.selfiepro.filters.FiltersListFragment;
+import com.mojodigi.selfiepro.filters.FiltersPagerAdapter;
+import com.mojodigi.selfiepro.utils.ColorFilterGenerator;
 import com.mojodigi.selfiepro.utils.Constants;
+import com.mojodigi.selfiepro.utils.CustomProgressDialog;
 import com.mojodigi.selfiepro.utils.MyPreference;
-import com.zomato.photofilters.SampleFilters;
+import com.mojodigi.selfiepro.utils.Utilities;
+import com.yalantis.ucrop.UCrop;
 import com.zomato.photofilters.imageprocessors.Filter;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
+import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
-import java.util.Objects;
-
-import ja.burhanrashid52.photoeditor.OnPhotoEditorListener;
-import ja.burhanrashid52.photoeditor.ViewType;
+import java.util.Locale;
 
 
-public class CameraActivity  extends AppCompatActivity implements OnPhotoEditorListener, View.OnTouchListener,
-        View.OnClickListener, OnCameraEditTollsSelected, SeekBar.OnSeekBarChangeListener,  ThumbnailCallback, OnToolsRecyclerSelected
+public class CameraActivity  extends AppCompatActivity implements FiltersListFragment.FiltersListFragmentListener, /*View.OnTouchListener,*/
+        View.OnClickListener,  OnCameraEditTollsSelected, SeekBar.OnSeekBarChangeListener , OnCameraSubTollsSelected
 {
-    private static final String TAG = CameraActivity.class.getSimpleName();
-    private static final int PICK_CAMERA_REQUEST = 1;
-    private Bitmap mSelectedImageBitMap = null  ;
-    private ImageView selectedImageView ,  cameraSelectedImageShape ;
-    private String mImageName ;
-    private RelativeLayout mCameraRLayout;
-    private boolean isKitKat = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT;
-    private LinearLayout mCameraEditBackLLayout, cameraDiscardLayout , /*cameraRedoRotationLayout,*/  mCameraSaveLayout , cameraEffectsSeekbarLLayout , cameraRecyclerLayout ;
-    private MyPreference mMyPrecfence = null;
-    private RecyclerView mCameraListRecycleView , mCameraFrameRecycleView;
-    private RecyclerView cameraEditToolsRecycleView , cameraFilterView;
-    private CameraEditToolsAdapter mCameraEditToolsAdapter;
-    private ToolsRecyclerAdapter toolsRecyclerAdapter;
 
-    private String mIntentType = "";
     private Context mContext = null ;
-    private File mImageFile = null;
+    private static final String TAG = CameraActivity.class.getSimpleName();
+    private static final int REQUEST_TYPE_CAMERA = 101;
 
-    private boolean imageSelectedOrNot = false;
-    private boolean isSelectedImage = true;
+    static { System.loadLibrary("NativeImageProcessor"); }
+
+    private ImageView    undoCameraImageView , redoCameraImageView;
+
+    private PhotoView cameraSelectedImageShape , adjustCameraPhotoView;
+
+    private TextView   undoCameraTextView , redoCameraTextView;
+
+    private RelativeLayout cameraSelectedImageRLayout  , adjustCameraRLayout , adjustCameraPhotoRLayout ;
+    private LinearLayout mCameraEditBackLLayout, undoCameraImageLayout , redoCameraImageLayout , discardCameraLayout, mCameraSaveLayout , cameraAdjustSeekbarLLayout , cameraSubToolsLayout ;
+    private MyPreference mMyPrecfence = null;
+
+
+
+    private RecyclerView cameraEditToolsRecycleView ;
+    private CameraEditToolsAdapter mCameraEditToolsAdapter;
+    private CameraSubToolsAdapter cameraSubToolsAdapter;
 
     private SeekBar cameraBrightness , cameraContrast ;
-    private static final int CROP_IMAGE = 2;
 
     public static CameraActivity instance;
-    private RecyclerView imageEffectsThumbnails , toolsRecyclerView;
+    private RecyclerView  cameraSubToolsRecycler;
 
-    static {
-        System.loadLibrary("NativeImageProcessor");
-    }
+
 
     private String pictureFilePath;
 
-    private FrameLayout cameraFrameShape;
 
-    // We can be in one of these 3 states
-    private static final int NONE = 0;
-    private static final int DRAG = 1;
-    private static final int ZOOM = 2;
-    private int mode = NONE;
+    private float angleRotation = 0;
 
-    // Remember some things for zooming
-    private float oldDist = 1f;
+    private LinearLayout  mCameraImageLLayout , cameraEffectsLLayout ,blankCameraLayoutTop, blankCameraLayoutBottom ;
 
-    /***********New************/
-    float scalediff;
-    private float d = 0f;
-    private float newRot = 0f;
+    private int currentShowingIndex = 0;
+    private Uri  mainPathUri  ;
 
-    FrameLayout.LayoutParams parms;
-    int startwidth;
-    int startheight;
-    float dx = 0, dy = 0, x = 0, y = 0;
-    float angle = 0;
+    private ArrayList<Uri> pathForTempList  ;
 
-    FrameLayout.LayoutParams  frameLayoutParams ;
+    private int progressBright , progressContrast;
 
+    private Bitmap originalImage , firstImage , initialBitmap;
+    private Bitmap filteredImage;
+    private FiltersListFragment filtersListFragment;
+    private ViewPager filters_viewpager ;
+    private Bitmap cropedBitmap ;
+
+    private SharedPreferenceUtil addprefs;
+    private View adContainer;
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
@@ -140,6 +134,9 @@ public class CameraActivity  extends AppCompatActivity implements OnPhotoEditorL
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
+        Constants.isAdjustCameraImage =false;
+        Constants.isImageCroped =false;
+        Constants.editImageUri = "false";
 
         instance = this;
 
@@ -150,91 +147,201 @@ public class CameraActivity  extends AppCompatActivity implements OnPhotoEditorL
             mMyPrecfence = MyPreference.getMyPreferenceInstance(mContext);
         }
 
-        try {
-            mMyPrecfence.saveString(Constants.COLLAGE_ACTIVITY, "true");
-            mIntentType = mMyPrecfence.getString(Constants.INTENT_TYPE);
-        } catch (Exception ex) {
-            ex.getStackTrace();
-        }
+        pathForTempList = new ArrayList<Uri>();
+        pathForTempList.clear();
+        currentShowingIndex=0;
+        deleteTempExtraFile();
+
+        getIntentUri();
+
         initView();
+
+
+        filters_viewpager = (ViewPager)findViewById(R.id.filters_viewpager);;
+        setupViewPager(filters_viewpager);
+        loadImageFilters();
+
+
+        addprefs = new SharedPreferenceUtil(mContext);
+        AddMobUtils adutil = new AddMobUtils();
+
+        if(AddConstants.checkIsOnline(mContext) && adContainer !=null && addprefs !=null)
+        {
+            String AddPrioverId=addprefs.getStringValue(AddConstants.ADD_PROVIDER_ID, AddConstants.NOT_FOUND);
+            if(AddPrioverId.equalsIgnoreCase(AddConstants.FaceBookAddProividerId))
+            {
+                adutil.dispFacebookBannerAdd(mContext,addprefs , CameraActivity.this);
+            }
+        }
+        else {
+            Log.e("","");
+        }
     }
+
+    private void getIntentUri() {
+        Uri getedIntentUri = null;
+        Intent extrasIntent = getIntent();
+        if (extrasIntent != null) {
+            getedIntentUri = extrasIntent.getParcelableExtra(Constants.URI_CAMERA);
+
+            try {
+                Bitmap  bitmap   = MediaStore.Images.Media.getBitmap(this.getContentResolver(), getedIntentUri);
+                firstImage = bitmap;
+                Constants.capturedImageBitmap = bitmap;
+                setFiltersImage();
+
+                Uri compressedUri = Uri.parse(compressImage(getedIntentUri.toString()));
+                File imgFile = new  File(compressImage(compressedUri.toString()));
+                Uri compressedUri2 ;
+                 Bitmap compressedBitmap ;
+                if(imgFile.exists()) {
+                      compressedUri2 = Uri.fromFile(imgFile);
+                    //Log.e("Camera File Uri " , compressedUri2+"");
+                    compressedBitmap =  MediaStore.Images.Media.getBitmap(this.getContentResolver(), compressedUri2);
+                    Constants.capturedImageBitmap = compressedBitmap;
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            catch ( Exception ex) {
+                ex.printStackTrace();
+            }
+            //Log.e("On Create List " ,  pathForTempList.size()+"");
+            //Log.e("On Create Index " ,  currentShowingIndex+"");
+        }
+    }
+
 
     @Override
     protected void onResume() {
         super.onResume();
 
-        cameraEffectsSeekbarLLayout.setVisibility(View.GONE);
-        mCameraFrameRecycleView.setVisibility(View.GONE);
-        mCameraListRecycleView.setVisibility(View.GONE);
-        imageEffectsThumbnails.setVisibility(View.GONE);
-        cameraRecyclerLayout.setVisibility(View.GONE);
-        toolsRecyclerView.setVisibility(View.GONE);
-    }
 
+        adjustCameraRLayout.setVisibility(View.GONE);
+        cameraSelectedImageRLayout.setVisibility(View.VISIBLE);
+
+        blankCameraLayoutBottom.setVisibility(View.VISIBLE);
+        cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
+        cameraEffectsLLayout.setVisibility(View.GONE);
+        cameraSubToolsLayout.setVisibility(View.GONE);
+        cameraSubToolsRecycler.setVisibility(View.GONE);
+
+        cameraSelectedImageShape.setLayoutParams(
+                new android.widget.RelativeLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT
+                ) );
+        cameraSelectedImageShape.setScaleType(ImageView.ScaleType.FIT_CENTER);
+
+        if(Constants.editImageUri.equalsIgnoreCase("true")) {
+            CustomProgressDialog.show(mContext,getResources().getString(R.string.loading_msg));
+            Bitmap bitmap = null;
+            try {
+                bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), Constants.imageUri);
+                Constants.capturedImageBitmap = bitmap;
+                setFiltersImage();
+
+                cameraSelectedImageShape.setLayoutParams(
+                        new android.widget.RelativeLayout.LayoutParams(
+                                ViewGroup.LayoutParams.MATCH_PARENT,
+                                ViewGroup.LayoutParams.MATCH_PARENT
+                        ) );
+
+                cameraSelectedImageShape.setScaleType(ImageView.ScaleType.FIT_CENTER);
+
+                cameraSelectedImageShape.setImageBitmap(originalImage);
+
+                cameraSelectedImageShape.setRotation(0);
+                fixAntiAlias(cameraSelectedImageShape);
+
+                //cameraBrightness.setProgress(0);
+                //cameraContrast.setProgress(0);
+
+                addToUndoReodList();
+                hideShowUndoRedo();
+
+                CustomProgressDialog.dismiss();
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }catch ( Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+        Constants.editImageUri = "false";
+        Constants.isAdjustCameraImage =false;
+    }
 
     @SuppressLint("ClickableViewAccessibility")
     private void initView() {
-
-       frameLayoutParams = new FrameLayout.LayoutParams(700, 900 );
-    //frameLayoutParams = new FrameLayout.LayoutParams(700, 900 , Gravity.CENTER);
-     //FrameLayout.LayoutParams  frameLayoutParams = new FrameLayout.LayoutParams(700, 900 , Gravity.CENTER);
-
-        // FrameLayout.LayoutParams  layoutParams = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT);
-
-//        layoutParams.leftMargin = -50;
-//        layoutParams.topMargin = -50;
-//        layoutParams.bottomMargin = -150;
-//        layoutParams.rightMargin = -150;
-
-        cameraSelectedImageShape = (ImageView) findViewById(R.id.cameraSelectedImageShape);
-        //cameraSelectedImageShape.setPadding(-20, -20, -20, -20);
-        //cameraSelectedImageShape.setBackground(getResources().getDrawable(R.drawable.white_image_bg));
-
-        cameraSelectedImageShape.setLayoutParams(frameLayoutParams);
-        cameraSelectedImageShape.setOnTouchListener(this);
+        adContainer = findViewById(R.id.adMobView);
+        cameraSelectedImageRLayout = (RelativeLayout) findViewById(R.id.cameraSelectedImageRLayout);
+        cameraSelectedImageRLayout.setVisibility(View.VISIBLE);
 
 
-        imageEffectsThumbnails = (RecyclerView) findViewById(R.id.imageEffectsThumbnails);
-        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
-        layoutManager.setOrientation(LinearLayoutManager.HORIZONTAL);
-        layoutManager.scrollToPosition(0);
-        imageEffectsThumbnails.setLayoutManager(layoutManager);
-        imageEffectsThumbnails.setHasFixedSize(true);
+        adjustCameraRLayout = (RelativeLayout) findViewById(R.id.adjustCameraRLayout);
+        adjustCameraRLayout.setVisibility(View.GONE);
+        adjustCameraPhotoRLayout = (RelativeLayout) findViewById(R.id.adjustCameraPhotoRLayout);
+        adjustCameraPhotoView = (PhotoView) findViewById(R.id.adjustCameraPhotoView);
+        adjustCameraPhotoView.setRotation(0);
+        fixAntiAlias(adjustCameraPhotoView);
 
-        mCameraRLayout = (RelativeLayout) findViewById(R.id.idCameraRLayout);
-        cameraFrameShape = (FrameLayout) findViewById(R.id.cameraFrameShape);
+        cameraSelectedImageShape = (PhotoView) findViewById(R.id.cameraSelectedImageShape);
+        cameraSelectedImageShape.setLayoutParams(
+                new android.widget.RelativeLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT
+                ) );
+        cameraSelectedImageShape.setScaleType(ImageView.ScaleType.FIT_CENTER);
+
+        cameraSelectedImageShape.setImageBitmap(Constants.capturedImageBitmap);
+        //cameraSelectedImageShape.setColorFilter(Utilities.setBrightness(110));
+        cameraSelectedImageShape.setOnClickListener(this);
+        cameraSelectedImageShape.setRotation(0);
+        fixAntiAlias(cameraSelectedImageShape);
+
+
+        mCameraImageLLayout = (LinearLayout) findViewById(R.id.idCameraImageLLayout);
+        cameraEffectsLLayout = (LinearLayout) findViewById(R.id.cameraEffectsLLayout);
+
+        blankCameraLayoutTop = (LinearLayout) findViewById(R.id.blankCameraLayoutTop);
+        blankCameraLayoutTop.setVisibility(View.VISIBLE);
+        blankCameraLayoutTop.setOnClickListener(this);
+        blankCameraLayoutBottom = (LinearLayout) findViewById(R.id.blankCameraLayoutBottom);
+        blankCameraLayoutBottom.setVisibility(View.VISIBLE);
+        blankCameraLayoutBottom.setOnClickListener(this);
 
         mCameraEditToolsAdapter = new CameraEditToolsAdapter(this);
-        toolsRecyclerAdapter = new ToolsRecyclerAdapter(this);
-
+        cameraSubToolsAdapter = new CameraSubToolsAdapter(this);
 
         mCameraEditBackLLayout = (LinearLayout) findViewById(R.id.idCameraEditBackLLayout);
-        cameraDiscardLayout = (LinearLayout) findViewById(R.id.cameraDiscardLayout);
-        //cameraRedoRotationLayout = (LinearLayout) findViewById(R.id.cameraRedoRotationLayout);
+
+        undoCameraImageLayout = (LinearLayout) findViewById(R.id.undoCameraImageLayout);
+        undoCameraImageView = (ImageView) findViewById(R.id.undoCameraImageView);
+        undoCameraTextView = (TextView) findViewById(R.id.undoCameraTextView);
+
+        redoCameraImageLayout = (LinearLayout) findViewById(R.id.redoCameraImageLayout);
+        redoCameraImageView = (ImageView) findViewById(R.id.redoCameraImageView);
+        redoCameraTextView = (TextView) findViewById(R.id.redoCameraTextView);
+
+        discardCameraLayout = (LinearLayout) findViewById(R.id.discardCameraLayout);
+
         mCameraSaveLayout = (LinearLayout) findViewById(R.id.idCameraSaveLayout);
+        cameraSubToolsLayout = (LinearLayout) findViewById(R.id.cameraSubToolsLayout);
 
-
-        cameraRecyclerLayout = (LinearLayout) findViewById(R.id.cameraRecyclerLayout);
-        cameraRecyclerLayout.setVisibility(View.GONE);
-
-        cameraEffectsSeekbarLLayout = (LinearLayout) findViewById(R.id.cameraEffectsSeekbarLLayout);
-        cameraEffectsSeekbarLLayout.setOnClickListener(this);
+        cameraAdjustSeekbarLLayout = (LinearLayout) findViewById(R.id.cameraAdjustSeekbarLLayout);
+        cameraAdjustSeekbarLLayout.setOnClickListener(this);
         mCameraEditBackLLayout.setOnClickListener(this);
-        cameraDiscardLayout.setOnClickListener(this);
-        //cameraRedoRotationLayout.setOnClickListener(this);
         mCameraSaveLayout.setOnClickListener(this);
+        undoCameraImageLayout.setOnClickListener(this);
+        redoCameraImageLayout.setOnClickListener(this);
+        discardCameraLayout.setOnClickListener(this);
 
         cameraBrightness = (SeekBar)findViewById(R.id.cameraBrightness);
         cameraBrightness.setOnSeekBarChangeListener(this);
 
         cameraContrast = (SeekBar)findViewById(R.id.cameraContrast);
         cameraContrast.setOnSeekBarChangeListener(this);
-
-        mCameraListRecycleView = (RecyclerView) findViewById(R.id.idCameraListRecycleView);
-        mCameraFrameRecycleView = (RecyclerView) findViewById(R.id.idCameraFrameRecycleView);
-        mCameraListRecycleView.setVisibility(View.GONE);
-        mCameraFrameRecycleView.setVisibility(View.GONE);
-
 
         cameraEditToolsRecycleView = (RecyclerView) findViewById(R.id.cameraEditToolsRecycleView);
         cameraEditToolsRecycleView.setVisibility(View.VISIBLE);
@@ -243,870 +350,750 @@ public class CameraActivity  extends AppCompatActivity implements OnPhotoEditorL
         cameraEditToolsRecycleView.setLayoutManager(mCollageEditToolsLManager);
         cameraEditToolsRecycleView.setAdapter(mCameraEditToolsAdapter);
 
+        cameraSubToolsRecycler = (RecyclerView) findViewById(R.id.cameraSubToolsRecycler);
 
-        cameraFilterView = (RecyclerView) findViewById(R.id.cameraFilterView);
-        cameraFilterView.setVisibility(View.GONE);
+        LinearLayoutManager mcameraSubToolsAdapterLManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
+        cameraSubToolsRecycler.setLayoutManager(mcameraSubToolsAdapterLManager);
+        cameraSubToolsRecycler.setAdapter(cameraSubToolsAdapter);
 
+        addToUndoReodList();
+        hideShowUndoRedo();
 
-        toolsRecyclerView = (RecyclerView) findViewById(R.id.toolsRecyclerView);
-        toolsRecyclerView.setVisibility(View.GONE);
-
-
-        LinearLayoutManager mtoolsRecyclerAdapterLManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
-        toolsRecyclerView.setLayoutManager(mtoolsRecyclerAdapterLManager);
-        toolsRecyclerView.setAdapter(toolsRecyclerAdapter);
+    }
 
 
 
-        /**************************************Get Image******************************/
-        if (mIntentType.equalsIgnoreCase("IntentCamera")) {
-            Uri myUri = null;
-            Intent extrasIntent = getIntent();
-            if (extrasIntent != null) {
-                myUri = extrasIntent.getParcelableExtra("BITMAP_PICK_CAMERA");
 
-                cameraSelectedImageShape.setImageURI(myUri);
-                //angle = angle + 1;
+    private void loadImageFilters( ) {
+        originalImage = Constants.capturedImageBitmap ;
+        filteredImage = originalImage.copy(Bitmap.Config.ARGB_8888, true);
+        //finalImage = originalImage.copy(Bitmap.Config.ARGB_8888, true);
+    }
 
-                cameraSelectedImageShape.setRotation(1);
+    public void setFiltersImage() {
+        originalImage = Constants.capturedImageBitmap;
+        filteredImage = originalImage.copy(Bitmap.Config.ARGB_8888, true);
+        //finalImage = originalImage.copy(Bitmap.Config.ARGB_8888, true);
+        filters_viewpager =(ViewPager) findViewById(R.id.filters_viewpager);
+        setupViewPager(filters_viewpager);
+    }
 
-                fixAntiAlias(cameraSelectedImageShape);
+    private void setupViewPager(ViewPager viewPager) {
+        FiltersPagerAdapter adapter = new FiltersPagerAdapter(getSupportFragmentManager());
+        filtersListFragment = new FiltersListFragment();
+        filtersListFragment.setListener(this);
+        adapter.addFragment(filtersListFragment, getString(R.string.tab_filters));
+        viewPager.setAdapter(adapter);
+    }
 
 
-                // cameraSelectedImageShape.setBackgroundColor(Color.parseColor("#ffffff"));
-                //cameraSelectedImageShape.setBackgroundColor(getResources().getColor(R.color.white));
-                //cameraSelectedImageShape.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                //cameraSelectedImageShape.setRotation(0);
-
-                //cameraSelectedImageShape.setImageBitmap(flipImage(((BitmapDrawable) cameraSelectedImageShape.getDrawable()).getBitmap()));
-                //cameraSelectedImageShape.setImageBitmap(flipImage(((BitmapDrawable) cameraSelectedImageShape.getDrawable()).getBitmap()));
-
-                imageSelectedOrNot = true;
-            }
-            try {
-                mSelectedImageBitMap = MediaStore.Images.Media.getBitmap(getContentResolver(), myUri);
-                //cameraSelectedImageShape.setImageBitmap(mSelectedImageBitMap);
-//                Matrix mat = new Matrix();
-//                if (mSelectedImageBitMap != null) {
-//                    mBitmapRotate = Bitmap.createBitmap(mSelectedImageBitMap, 0, 0,
-//                            mSelectedImageBitMap.getWidth(), mSelectedImageBitMap.getHeight(), mat, true);
-//                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+    @Override
+    public void onFilterSelected(Filter filter) {
+        CustomProgressDialog.show(mContext,getResources().getString(R.string.loading_msg));
+        originalImage = Constants.capturedImageBitmap;
+        filteredImage = originalImage.copy(Bitmap.Config.ARGB_8888, true);
+        //finalImage = filteredImage.copy(Bitmap.Config.ARGB_8888, true);
+        cameraSelectedImageShape.setImageBitmap(filter.processFilter(filteredImage));
+        addToUndoReodList();
+        CustomProgressDialog.dismiss();
     }
 
 
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
-            case R.id.idCameraSaveLayout:
-                saveImage();
-                break;
-
-            case R.id.cameraDiscardLayout:
-                //cameraSelectedImageShape.setLayoutParams(new FrameLayout.LayoutParams(700, 900, Gravity.CENTER));
-                //frameLayoutParams = new FrameLayout.LayoutParams(700, 900 , Gravity.CENTER);
-                cameraSelectedImageShape.setRotation(1);
-                fixAntiAlias(cameraSelectedImageShape);
-                break;
-
-//            case R.id.cameraRedoRotationLayout:
-//                cameraSelectedImageShape.setRotation(angle);
-//                fixAntiAlias(cameraSelectedImageShape);
-//                break;
-
             case R.id.idCameraEditBackLLayout:
-                //Toast.makeText(mContext, "Camera Selected Image Shape" , Toast.LENGTH_SHORT).show();
-               show_alert_back("Exit", "Are you sure you want to exit Editor ?");
+
+                if(Constants.isAdjustCameraImage){
+                    Constants.capturedImageBitmap = createBitmapFromLayout(adjustCameraPhotoRLayout);
+                    cameraSelectedImageShape.setImageBitmap(Constants.capturedImageBitmap);
+
+                    adjustCameraRLayout.setVisibility(View.GONE);
+                    cameraSelectedImageRLayout.setVisibility(View.VISIBLE);
+
+                    blankCameraLayoutBottom.setVisibility(View.VISIBLE);
+                    cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
+                    cameraEffectsLLayout.setVisibility(View.GONE);
+                    cameraSubToolsLayout.setVisibility(View.GONE);
+                    cameraSubToolsRecycler.setVisibility(View.GONE);
+                    addToUndoReodList();
+                    Constants.isAdjustCameraImage=false;
+                }
+
+                adjustCameraRLayout.setVisibility(View.GONE);
+                cameraSelectedImageRLayout.setVisibility(View.VISIBLE);
+
+                blankCameraLayoutBottom.setVisibility(View.VISIBLE);
+                cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
+                cameraEffectsLLayout.setVisibility(View.GONE);
+                cameraSubToolsLayout.setVisibility(View.GONE);
+                cameraSubToolsRecycler.setVisibility(View.GONE);
+                show_alert_back("Exit", "Are you sure you want to exit Editor ?");
+                break;
+
+
+            case R.id.undoCameraImageLayout:
+                Constants.isAdjustCameraImage = false;
+
+                adjustCameraRLayout.setVisibility(View.GONE);
+                cameraSelectedImageRLayout.setVisibility(View.VISIBLE);
+
+                blankCameraLayoutBottom.setVisibility(View.VISIBLE);
+                cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
+                cameraEffectsLLayout.setVisibility(View.GONE);
+                cameraSubToolsLayout.setVisibility(View.GONE);
+                cameraSubToolsRecycler.setVisibility(View.GONE);
+
+                Log.e("Undo List Size", pathForTempList.size()+"");
+                Log.e("Undo Index " ,  currentShowingIndex+"");
+
+                if(currentShowingIndex>pathForTempList.size()){
+                    currentShowingIndex = currentShowingIndex-1;
+                    return;
+                }
+
+                hideShowUndoRedo();
+                if(currentShowingIndex >=1) {
+                    onUndoPressed( );
+                }else {Log.e("" ,"");}
+
+                break;
+
+
+
+            case R.id.redoCameraImageLayout:
+                Constants.isAdjustCameraImage = false;
+                cameraSelectedImageRLayout.setVisibility(View.VISIBLE);
+                adjustCameraRLayout.setVisibility(View.GONE);
+
+                blankCameraLayoutBottom.setVisibility(View.VISIBLE);
+                cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
+                cameraEffectsLLayout.setVisibility(View.GONE);
+                cameraSubToolsLayout.setVisibility(View.GONE);
+                cameraSubToolsRecycler.setVisibility(View.GONE);
+
+                Log.e("Redo List Size", pathForTempList.size()+"");
+                Log.e("Redo Index " ,  currentShowingIndex+"");
+                if(currentShowingIndex>pathForTempList.size()){
+                    currentShowingIndex = currentShowingIndex-1;
+                    return;
+                }
+                hideShowUndoRedo();
+                if(currentShowingIndex < pathForTempList.size()-1) {
+                    onRedoPressed();
+                }else {Log.e("" ,"");}
+
+                break;
+
+            case R.id.idCameraSaveLayout:
+
+                if(Constants.isAdjustCameraImage){
+
+                    Constants.capturedImageBitmap = createBitmapFromLayout(adjustCameraPhotoRLayout);
+
+                    cameraSelectedImageShape.setImageBitmap(Constants.capturedImageBitmap);
+
+                    adjustCameraRLayout.setVisibility(View.GONE);
+                    cameraSelectedImageRLayout.setVisibility(View.VISIBLE);
+
+                    blankCameraLayoutBottom.setVisibility(View.VISIBLE);
+                    cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
+                    cameraEffectsLLayout.setVisibility(View.GONE);
+                    cameraSubToolsLayout.setVisibility(View.GONE);
+                    cameraSubToolsRecycler.setVisibility(View.GONE);
+                    addToUndoReodList();
+                    Constants.isAdjustCameraImage=false;
+                }
+
+                adjustCameraRLayout.setVisibility(View.GONE);
+                cameraSelectedImageRLayout.setVisibility(View.VISIBLE);
+
+                blankCameraLayoutBottom.setVisibility(View.VISIBLE);
+                cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
+                cameraEffectsLLayout.setVisibility(View.GONE);
+                cameraSubToolsLayout.setVisibility(View.GONE);
+                cameraSubToolsRecycler.setVisibility(View.GONE);
+
+
+                cameraSelectedImageShape.setLayoutParams(
+                        new android.widget.RelativeLayout.LayoutParams(
+                                ViewGroup.LayoutParams.WRAP_CONTENT,
+                                ViewGroup.LayoutParams.WRAP_CONTENT
+                        ) );
+                cameraSelectedImageShape.setScaleType(ImageView.ScaleType.FIT_CENTER);
+
+                if(cameraSelectedImageShape.getRotation()>0){
+                    Bitmap bitmap = createBitmapFromLayout(cameraSelectedImageRLayout);
+                    Utilities.saveSelfieProImage(mContext , bitmap);
+                }else if(cameraSelectedImageShape.getRotation()==0) {
+                   Bitmap bitmap = ((BitmapDrawable) cameraSelectedImageShape.getDrawable()).getBitmap();
+                   Utilities.saveSelfieProImage(mContext , bitmap);
+                }
+
+                cameraSelectedImageShape.setLayoutParams(
+                        new android.widget.RelativeLayout.LayoutParams(
+                                ViewGroup.LayoutParams.MATCH_PARENT,
+                                ViewGroup.LayoutParams.MATCH_PARENT
+                        ) );
+                cameraSelectedImageShape.setScaleType(ImageView.ScaleType.FIT_CENTER);
+
+                if(addprefs!=null)
+                    dispInterestialAdds();
+
+                break;
+
+            case R.id.blankCameraLayoutTop:
+                if(Constants.isAdjustCameraImage){
+                    Constants.capturedImageBitmap = createBitmapFromLayout(adjustCameraPhotoRLayout);
+                    cameraSelectedImageShape.setImageBitmap(Constants.capturedImageBitmap);
+
+                    adjustCameraRLayout.setVisibility(View.GONE);
+                    cameraSelectedImageRLayout.setVisibility(View.VISIBLE);
+
+                    blankCameraLayoutTop.setVisibility(View.VISIBLE);
+                    blankCameraLayoutBottom.setVisibility(View.VISIBLE);
+                    cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
+                    cameraEffectsLLayout.setVisibility(View.GONE);
+                    cameraSubToolsLayout.setVisibility(View.GONE);
+                    cameraSubToolsRecycler.setVisibility(View.GONE);
+
+                    addToUndoReodList();
+                    Constants.isAdjustCameraImage=false;
+                }
+
+                adjustCameraRLayout.setVisibility(View.GONE);
+                cameraSelectedImageRLayout.setVisibility(View.VISIBLE);
+
+                blankCameraLayoutTop.setVisibility(View.VISIBLE);
+                blankCameraLayoutBottom.setVisibility(View.VISIBLE);
+                cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
+                cameraEffectsLLayout.setVisibility(View.GONE);
+                cameraSubToolsLayout.setVisibility(View.GONE);
+                cameraSubToolsRecycler.setVisibility(View.GONE);
+                break;
+
+            case R.id.blankCameraLayoutBottom:
+                if(Constants.isAdjustCameraImage){
+                    Constants.capturedImageBitmap = createBitmapFromLayout(adjustCameraPhotoRLayout);
+                    cameraSelectedImageShape.setImageBitmap(Constants.capturedImageBitmap);
+
+                    adjustCameraRLayout.setVisibility(View.GONE);
+                    cameraSelectedImageRLayout.setVisibility(View.VISIBLE);
+
+                    blankCameraLayoutTop.setVisibility(View.VISIBLE);
+                    blankCameraLayoutBottom.setVisibility(View.VISIBLE);
+                    cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
+                    cameraEffectsLLayout.setVisibility(View.GONE);
+                    cameraSubToolsLayout.setVisibility(View.GONE);
+                    cameraSubToolsRecycler.setVisibility(View.GONE);
+                    addToUndoReodList();
+                    Constants.isAdjustCameraImage=false;
+                }
+
+                adjustCameraRLayout.setVisibility(View.GONE);
+                cameraSelectedImageRLayout.setVisibility(View.VISIBLE);
+
+                blankCameraLayoutTop.setVisibility(View.VISIBLE);
+                blankCameraLayoutBottom.setVisibility(View.VISIBLE);
+                cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
+                cameraEffectsLLayout.setVisibility(View.GONE);
+                cameraSubToolsLayout.setVisibility(View.GONE);
+                cameraSubToolsRecycler.setVisibility(View.GONE);
                 break;
         }
     }
 
-    @SuppressLint("ClickableViewAccessibility")
-    @Override
-    public boolean onTouch(View v, MotionEvent event) {
-        final ImageView view = (ImageView) v;
+    private void dispInterestialAdds() {
+        AddMobUtils addutil = new AddMobUtils();
+        if (AddConstants.checkIsOnline(mContext) && addprefs != null) {
 
-        if (view == cameraSelectedImageShape) {
-            //cameraSelectedImageShape.setScaleType(ImageView.ScaleType.MATRIX);
-            //selectedImageView = cameraSelectedImageShape ;
-            isSelectedImage = true;
-
-            //if(cameraSelectedImageShape!=null)
-            // cameraSelectedImageShape.setBackgroundColor(getResources().getColor(R.color.white));
-            //cameraSelectedImageShape.setBackground(getResources().getDrawable(R.drawable.white_image_bg));
-
-           // ((BitmapDrawable) view.getDrawable()).setAntiAlias(true);
-
-            switch (event.getAction() & MotionEvent.ACTION_MASK) {
-                case MotionEvent.ACTION_DOWN:
-
-                    parms = (FrameLayout.LayoutParams) view.getLayoutParams();
-                    startwidth = parms.width;
-                    startheight = parms.height;
-                    dx = event.getRawX() - parms.leftMargin;
-                    dy = event.getRawY() - parms.topMargin;
-                    mode = DRAG;
-                    break;
-
-                case MotionEvent.ACTION_POINTER_DOWN:
-                    oldDist = spacing(event);
-                    if (oldDist > 10f) {
-                        mode = ZOOM;
-                    }
-
-                    d = rotation(event);
-
-                    break;
-                case MotionEvent.ACTION_UP:
-
-                    break;
-
-                case MotionEvent.ACTION_POINTER_UP:
-                    mode = NONE;
-
-                    break;
-                case MotionEvent.ACTION_MOVE:
-                    if (mode == DRAG) {
-
-                        x = event.getRawX();
-                        y = event.getRawY();
-
-                        parms.leftMargin = (int) (x - dx);
-                        parms.topMargin = (int) (y - dy);
-
-                        parms.rightMargin = 0;
-                        parms.bottomMargin = 0;
-                        parms.rightMargin = parms.leftMargin + (5 * parms.width);
-                        parms.bottomMargin = parms.topMargin + (10 * parms.height);
-
-                        view.setLayoutParams(parms);
-
-                    } else if (mode == ZOOM) {
-
-                        if (event.getPointerCount() == 2) {
-
-                            newRot = rotation(event);
-                            float r = newRot - d;
-                            angle = r;
-
-                            x = event.getRawX();
-                            y = event.getRawY();
-
-                            float newDist = spacing(event);
-                            if (newDist > 10f) {
-                                float scale = newDist / oldDist * view.getScaleX();
-                                if (scale > 0.6) {
-                                    scalediff = scale;
-                                    view.setScaleX(scale);
-                                    view.setScaleY(scale);
-
-                                }
-                            }
-
-                            view.animate().rotationBy(angle).setDuration(0).setInterpolator(new LinearInterpolator()).start();
-
-                            x = event.getRawX();
-                            y = event.getRawY();
-
-                            parms.leftMargin = (int) ((x - dx) + scalediff);
-                            parms.topMargin = (int) ((y - dy) + scalediff);
-
-                            parms.rightMargin = 0;
-                            parms.bottomMargin = 0;
-                            parms.rightMargin = parms.leftMargin + (5 * parms.width);
-                            parms.bottomMargin = parms.topMargin + (10 * parms.height);
-
-                            view.setLayoutParams(parms);
-
-
-                        }
-                    }
-                    break;
+            String addPrioverId = addprefs.getStringValue(AddConstants.ADD_PROVIDER_ID, AddConstants.NOT_FOUND);
+            if (addPrioverId.equalsIgnoreCase(AddConstants.FaceBookAddProividerId)) {
+                addutil.dispFacebookInterestialAdds(mContext, addprefs);
             }
-        }
-        return true;
-
+        } else
+            Log.e("", "");
     }
 
-
-    private float spacing(MotionEvent event) {
-        float x = event.getX(0) - event.getX(1);
-        float y = event.getY(0) - event.getY(1);
-        return (float) Math.sqrt(x * x + y * y);
-    }
-
-    private float rotation(MotionEvent event) {
-        double delta_x = (event.getX(0) - event.getX(1));
-        double delta_y = (event.getY(0) - event.getY(1));
-        double radians = Math.atan2(delta_y, delta_x);
-        return (float) Math.toDegrees(radians);
-    }
-
-    @SuppressLint("ObsoleteSdkInt")
-    private void fixAntiAlias(View viewAntiAlias) {
-        if (Build.VERSION.SDK_INT > 10) {
-            Paint p = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.DITHER_FLAG | Paint.FILTER_BITMAP_FLAG);
-            viewAntiAlias.setLayerType(View.LAYER_TYPE_SOFTWARE, p);
-            ((View) viewAntiAlias.getParent()).setLayerType(View.LAYER_TYPE_SOFTWARE, p);
-        }
-    }
-
-
+    /**************************onActivityResult Start************************************/
     @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == RESULT_OK  ) {
-            switch (requestCode) {
-                case PICK_CAMERA_REQUEST:
+        switch (requestCode) {
 
+            case REQUEST_TYPE_CAMERA:
+                if (resultCode == RESULT_OK) {
                     File imgFile = new File(pictureFilePath);
                     if (imgFile.exists()) {
-                        cameraSelectedImageShape.setImageURI(Uri.fromFile(imgFile));
-                        cameraSelectedImageShape.setRotation(1);
-                        fixAntiAlias(cameraSelectedImageShape);
-
+                        Constants.imageUri = Uri.fromFile(imgFile);
+                        //Uri gotedUri = Uri.fromFile(imgFile);
+                        //Constants.capturedImagePath = imgFile.getAbsolutePath();
+                        Bitmap bitmap = null;
                         try {
-                            mSelectedImageBitMap = MediaStore.Images.Media.getBitmap(getContentResolver(), Uri.fromFile(imgFile));
-//                            Matrix mat = new Matrix();
-//                            if (mSelectedImageBitMap != null) {
-//                                mBitmapRotate = Bitmap.createBitmap(mSelectedImageBitMap, 0,0,
-//                                        mSelectedImageBitMap.getWidth(), mSelectedImageBitMap.getHeight(), mat, true);
-//                            }
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
+                            bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), Constants.imageUri);
+                            Constants.capturedImageBitmap = bitmap;
+                            setFiltersImage();
+                            Uri compressedUri = Uri.parse(compressImage(Constants.imageUri.toString()));
+                            File compressFile = new  File(compressImage(compressedUri.toString()));
+                            Uri compressedUri2 ;
+                            Bitmap compressedBitmap ;
+                            if(compressFile.exists()) {
+                                compressedUri2 = Uri.fromFile(compressFile);
+                                //Log.e("Camera File Uri " , compressedUri2+"");
+                                compressedBitmap =  MediaStore.Images.Media.getBitmap(this.getContentResolver(), compressedUri2);
+                                Constants.capturedImageBitmap = compressedBitmap;
+                            }
 
-                    break;
-
-
-                case CROP_IMAGE:
-                    Bitmap mBitmap = null;
-                    Uri selectedImageUri = data.getData();
-                    if (selectedImageUri == null) {
-                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
-                            mBitmap = (Bitmap) Objects.requireNonNull(data.getExtras()).get("data");
-                        } else {
-                            mBitmap = (Bitmap) data.getExtras().get("data");
-                        }
-                    } else if (selectedImageUri != null && Build.VERSION.SDK_INT == Build.VERSION_CODES.N) {
-                        mBitmap = (Bitmap) data.getExtras().get("data");
-                    } else {
-                        try {
-                            mBitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), selectedImageUri);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-
-                    Matrix mat = new Matrix();
-                    if (mBitmap != null) {
-                        Bitmap mCropedBitmap = Bitmap.createBitmap(mBitmap, 0, 0,
-                                mBitmap.getWidth(), mBitmap.getHeight(), mat, true);
-
-                        if (isSelectedImage) {
-                            cameraSelectedImageShape.setImageBitmap(mCropedBitmap);
-                            //angle = angle + 1;
-                            //cameraSelectedImageShape.setRotation(angle);
+                            cameraSelectedImageShape.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                            cameraSelectedImageShape.setImageBitmap(Constants.capturedImageBitmap);
+                            //cameraSelectedImageShape.setColorFilter(Utilities.setBrightness(110));
+                            cameraSelectedImageShape.setRotation(0);
                             fixAntiAlias(cameraSelectedImageShape);
+
+
+                            cameraBrightness.setProgress(0);
+                            cameraContrast.setProgress(0);
+
+                            deleteTempExtraFile();
+                            addToUndoReodList();
+                            hideShowUndoRedo();
+                            Constants.isImageCroped = false;
+                            Constants.isAdjustCameraImage=false;
+
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }catch (Exception ex) {
+                            ex.printStackTrace();
                         }
                     }
+                }else   {
+                    //Toast.makeText(this, "Please try again.", Toast.LENGTH_SHORT).show();
+                    Log.e("you have not" , " clicked image.");
+                }
+                break;
 
-                    break;
 
+            case UCrop.REQUEST_CROP:
+                if (resultCode == RESULT_OK) {
+                    handleUCropResult(data);
+                } else {
+                    setResultCancelled();
+                }
+                break;
 
-            }
+            case UCrop.RESULT_ERROR:
+                //final Throwable cropError = UCrop.getError(data);
+                // Log.e(TAG, "Crop error: " + cropError);
+                setResultCancelled();
+                break;
+            default:
+                setResultCancelled();
+
         }
     }
 
 
 
+    private void handleUCropResult(Intent data) {
+        if (data == null) {
+            //Toast.makeText(this, "data", Toast.LENGTH_SHORT).show();
+            setResultCancelled();
+            return;
+        }
+        final Uri resultUri = UCrop.getOutput(data);
+        okResult(resultUri);
+        //Toast.makeText(this, "handleUCropResult", Toast.LENGTH_SHORT).show();
+    }
 
+    private void okResult(Uri imagePath) {
+        if (imagePath != null) {
+            Constants.imageUri = imagePath;
+            //Constants.capturedImagePath = imagePath.getPath();
+            Bitmap bitmap = null;
+            try {
+                bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), Constants.imageUri);
+                Constants.capturedImageBitmap = bitmap;
+                cropedBitmap = bitmap;
+
+                Constants.cameraEditBitmapWidth =  cropedBitmap.getWidth();
+                Constants.cameraEditBitmapHeight =  cropedBitmap.getHeight();
+
+                setFiltersImage();
+
+                cameraSelectedImageShape.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                cameraSelectedImageShape.setImageBitmap(bitmap);
+                //cameraSelectedImageShape.setImageURI(Constants.imageUri);
+                //cameraSelectedImageShape.setRotation(0);
+                fixAntiAlias(cameraSelectedImageShape);
+                addToUndoReodList();
+                hideShowUndoRedo();
+
+                Constants.isImageCroped = true;
+                Constants.isAdjustCameraImage=false;
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+
+    private void setResultCancelled() {
+        Log.e("Crop Result" , " Cancelled ");
+    }
 
     /**************Select Tolls  **********************/
     @Override
     public void onCameraEditTollsSelected(CameraEditToolsType cameraEditToolsType) {
         switch (cameraEditToolsType) {
+
             case CAMERA:
 
-                mCameraListRecycleView.setVisibility(View.GONE);
-                cameraFilterView.setVisibility(View.GONE);
-                cameraEffectsSeekbarLLayout.setVisibility(View.GONE);
-                imageEffectsThumbnails.setVisibility(View.GONE);
-                mCameraFrameRecycleView.setVisibility(View.GONE);
-                cameraRecyclerLayout.setVisibility(View.GONE);
-                toolsRecyclerView.setVisibility(View.GONE);
+                if(Constants.isAdjustCameraImage){
+                    Constants.capturedImageBitmap = createBitmapFromLayout(adjustCameraPhotoRLayout);
+                    cameraSelectedImageShape.setImageBitmap(Constants.capturedImageBitmap);
 
-                if(mMyPrecfence!=null)
-                    mMyPrecfence.saveString(Constants.INTENT_TYPE, "IntentCamera");
+                    adjustCameraRLayout.setVisibility(View.GONE);
+                    cameraSelectedImageRLayout.setVisibility(View.VISIBLE);
+
+                    blankCameraLayoutBottom.setVisibility(View.VISIBLE);
+                    cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
+                    cameraEffectsLLayout.setVisibility(View.GONE);
+                    cameraSubToolsLayout.setVisibility(View.GONE);
+                    cameraSubToolsRecycler.setVisibility(View.GONE);
+                    addToUndoReodList();
+                    Constants.isAdjustCameraImage=false;
+
+                }
+
+                cameraSelectedImageRLayout.setVisibility(View.VISIBLE);
+                adjustCameraRLayout.setVisibility(View.GONE);
+
+
+                blankCameraLayoutBottom.setVisibility(View.VISIBLE);
+                cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
+                cameraEffectsLLayout.setVisibility(View.GONE);
+                cameraSubToolsLayout.setVisibility(View.GONE);
+                cameraSubToolsRecycler.setVisibility(View.GONE);
+
                 if(getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA)){
                     sendTakePictureIntent();
                 }
+                deleteTempExtraFile();
 
                 break;
 
             case TOOLS:
-                //cameraSelectedImageShape.setScaleType(ImageView.ScaleType.MATRIX);
-                mCameraListRecycleView.setVisibility(View.GONE);
-                cameraFilterView.setVisibility(View.GONE);
-                cameraEffectsSeekbarLLayout.setVisibility(View.GONE);
-                imageEffectsThumbnails.setVisibility(View.GONE);
-                mCameraFrameRecycleView.setVisibility(View.GONE);
-                cameraRecyclerLayout.setVisibility(View.VISIBLE);
-                toolsRecyclerView.setVisibility(View.VISIBLE);
-                break;
+                if(Constants.isAdjustCameraImage){
+                    Constants.capturedImageBitmap = createBitmapFromLayout(adjustCameraPhotoRLayout);
+                    cameraSelectedImageShape.setImageBitmap(Constants.capturedImageBitmap);
 
+                    adjustCameraRLayout.setVisibility(View.GONE);
+                    cameraSelectedImageRLayout.setVisibility(View.VISIBLE);
+
+                    blankCameraLayoutBottom.setVisibility(View.VISIBLE);
+                    cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
+                    cameraEffectsLLayout.setVisibility(View.GONE);
+                    cameraSubToolsLayout.setVisibility(View.GONE);
+                    cameraSubToolsRecycler.setVisibility(View.GONE);
+                    addToUndoReodList();
+                    Constants.isAdjustCameraImage=false;
+
+                }
+
+                cameraSelectedImageRLayout.setVisibility(View.VISIBLE);
+                adjustCameraRLayout.setVisibility(View.GONE);
+
+                cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
+                cameraEffectsLLayout.setVisibility(View.GONE);
+                Constants.capturedImageBitmap = ((BitmapDrawable) cameraSelectedImageShape.getDrawable()).getBitmap();
+                if(cameraSubToolsRecycler.getVisibility() == View.VISIBLE ){
+                    blankCameraLayoutBottom.setVisibility(View.VISIBLE);
+                    cameraSubToolsLayout.setVisibility(View.GONE);
+                    cameraSubToolsRecycler.setVisibility(View.GONE);
+                }else {
+                    blankCameraLayoutBottom.setVisibility(View.GONE);
+                    cameraSubToolsLayout.setVisibility(View.VISIBLE);
+                    cameraSubToolsRecycler.setVisibility(View.VISIBLE);
+                }
+                break;
 
             case EFFECTS:
 
-                bindDataToAdapter();
+                if(Constants.isAdjustCameraImage){
+                    Constants.capturedImageBitmap = createBitmapFromLayout(adjustCameraPhotoRLayout);
+                    cameraSelectedImageShape.setImageBitmap(Constants.capturedImageBitmap);
 
-                mCameraFrameRecycleView.setVisibility(View.GONE);
-                mCameraListRecycleView.setVisibility(View.GONE);
-                cameraEffectsSeekbarLLayout.setVisibility(View.GONE);
-                cameraFilterView.setVisibility(View.GONE);
-                toolsRecyclerView.setVisibility(View.GONE);
-                cameraRecyclerLayout.setVisibility(View.VISIBLE);
-                imageEffectsThumbnails.setVisibility(View.VISIBLE);
+                    adjustCameraRLayout.setVisibility(View.GONE);
+                    cameraSelectedImageRLayout.setVisibility(View.VISIBLE);
 
-                 angle = angle + 1;
-                cameraSelectedImageShape.setRotation(1);
-                fixAntiAlias(cameraSelectedImageShape);
+                    blankCameraLayoutTop.setVisibility(View.VISIBLE);
+                    blankCameraLayoutBottom.setVisibility(View.VISIBLE);
+                    cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
+                    cameraEffectsLLayout.setVisibility(View.GONE);
+                    cameraSubToolsLayout.setVisibility(View.GONE);
+                    cameraSubToolsRecycler.setVisibility(View.GONE);
+                    addToUndoReodList();
+                    Constants.isAdjustCameraImage=false;
+                }
 
+                cameraSelectedImageRLayout.setVisibility(View.VISIBLE);
+                adjustCameraRLayout.setVisibility(View.GONE);
+
+                cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
+                cameraSubToolsRecycler.setVisibility(View.GONE);
+                //Bitmap  bitmap  = createBitmapFromLayout(cameraSelectedImageRLayout);
+                Constants.capturedImageBitmap = ((BitmapDrawable) cameraSelectedImageShape.getDrawable()).getBitmap();
+
+                setFiltersImage();
+
+                if(cameraEffectsLLayout.getVisibility() == View.VISIBLE ){
+                    blankCameraLayoutBottom.setVisibility(View.VISIBLE);
+                    cameraSubToolsLayout.setVisibility(View.GONE);
+                    cameraEffectsLLayout.setVisibility(View.GONE);
+                }else {
+                    blankCameraLayoutBottom.setVisibility(View.GONE);
+                    cameraSubToolsLayout.setVisibility(View.VISIBLE);
+                    cameraEffectsLLayout.setVisibility(View.VISIBLE);
+                }
                 break;
-
 
             case ADJUST:
-                mCameraFrameRecycleView.setVisibility(View.GONE);
-                mCameraListRecycleView.setVisibility(View.GONE);
-                cameraFilterView.setVisibility(View.GONE);
-                imageEffectsThumbnails.setVisibility(View.GONE);
-                toolsRecyclerView.setVisibility(View.GONE);
-                cameraRecyclerLayout.setVisibility(View.VISIBLE);
-                cameraEffectsSeekbarLLayout.setVisibility(View.VISIBLE);
+
+                if (!Constants.isAdjustCameraImage) {
+                    cameraSelectedImageShape.setLayoutParams(
+                            new android.widget.RelativeLayout.LayoutParams(
+                                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                                    ViewGroup.LayoutParams.WRAP_CONTENT
+                            ) );
+                    cameraSelectedImageShape.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                    Constants.capturedImageBitmap = ((BitmapDrawable) cameraSelectedImageShape.getDrawable()).getBitmap();
+
+                    adjustCameraPhotoView.setLayoutParams(
+                            new android.widget.RelativeLayout.LayoutParams(
+                                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                                    ViewGroup.LayoutParams.WRAP_CONTENT
+                            ) );
+                    adjustCameraPhotoView.setScaleType(ImageView.ScaleType.FIT_XY);
+
+                    adjustCameraPhotoView.setImageBitmap(Constants.capturedImageBitmap);
+                    adjustCameraPhotoView.setRotation(0);
+                    fixAntiAlias(adjustCameraPhotoView);
+
+                    cameraSelectedImageRLayout.setVisibility(View.GONE);
+                    adjustCameraRLayout.setVisibility(View.VISIBLE);
+
+                    Constants.isAdjustCameraImage = true;
+
+                    cameraSelectedImageShape.setLayoutParams(
+                            new android.widget.RelativeLayout.LayoutParams(
+                                    ViewGroup.LayoutParams.MATCH_PARENT,
+                                    ViewGroup.LayoutParams.MATCH_PARENT
+                            ) );
+                    cameraSelectedImageShape.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                }
+
+
+                cameraEffectsLLayout.setVisibility(View.GONE);
+                cameraSubToolsRecycler.setVisibility(View.GONE);
+                //Bitmap  bitmap  = createBitmapFromLayout(cameraSelectedImageRLayout);
+                Constants.capturedImageBitmap = ((BitmapDrawable) cameraSelectedImageShape.getDrawable()).getBitmap();
+                //addToUndoReodList();
+                if(cameraAdjustSeekbarLLayout.getVisibility() == View.VISIBLE ){
+                    blankCameraLayoutBottom.setVisibility(View.VISIBLE);
+                    cameraSubToolsLayout.setVisibility(View.GONE);
+                    cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
+                }else {
+                    blankCameraLayoutBottom.setVisibility(View.GONE);
+                    cameraSubToolsLayout.setVisibility(View.VISIBLE);
+                    cameraAdjustSeekbarLLayout.setVisibility(View.VISIBLE);
+                }
                 break;
-
-
-            case SAVE:
-                mCameraFrameRecycleView.setVisibility(View.GONE);
-                mCameraListRecycleView.setVisibility(View.GONE);
-                cameraFilterView.setVisibility(View.GONE);
-                cameraEffectsSeekbarLLayout.setVisibility(View.GONE);
-                imageEffectsThumbnails.setVisibility(View.GONE);
-                cameraRecyclerLayout.setVisibility(View.GONE);
-                toolsRecyclerView.setVisibility(View.GONE);
-
-                saveImage();
-                break;
-
 
 
             case EDIT:
 
-                mCameraListRecycleView.setVisibility(View.GONE);
-                cameraFilterView.setVisibility(View.GONE);
-                cameraEffectsSeekbarLLayout.setVisibility(View.GONE);
-                imageEffectsThumbnails.setVisibility(View.GONE);
-                mCameraFrameRecycleView.setVisibility(View.GONE);
-                cameraRecyclerLayout.setVisibility(View.GONE);
-                toolsRecyclerView.setVisibility(View.GONE);
+                if(Constants.isAdjustCameraImage){
+
+                    Constants.capturedImageBitmap = createBitmapFromLayout(adjustCameraPhotoRLayout);
+
+                    cameraSelectedImageShape.setImageBitmap(Constants.capturedImageBitmap);
+
+                    adjustCameraRLayout.setVisibility(View.GONE);
+                    cameraSelectedImageRLayout.setVisibility(View.VISIBLE);
+
+                    blankCameraLayoutBottom.setVisibility(View.VISIBLE);
+                    cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
+                    cameraEffectsLLayout.setVisibility(View.GONE);
+                    cameraSubToolsLayout.setVisibility(View.GONE);
+                    cameraSubToolsRecycler.setVisibility(View.GONE);
+                    addToUndoReodList();
+                    Constants.isAdjustCameraImage=false;
+
+                }
+
+                cameraSelectedImageRLayout.setVisibility(View.VISIBLE);
+                adjustCameraRLayout.setVisibility(View.GONE);
 
 
-                editImage();
+                blankCameraLayoutBottom.setVisibility(View.VISIBLE);
+                cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
+                cameraEffectsLLayout.setVisibility(View.GONE);
+                cameraSubToolsLayout.setVisibility(View.GONE);
+                cameraSubToolsRecycler.setVisibility(View.GONE);
 
-                mMyPrecfence.saveString(Constants.INTENT_TYPE, "CameraSelectedImage");
+                cameraSelectedImageShape.setLayoutParams(
+                        new android.widget.RelativeLayout.LayoutParams(
+                                ViewGroup.LayoutParams.MATCH_PARENT,
+                                ViewGroup.LayoutParams.WRAP_CONTENT
+                        ) );
+                cameraSelectedImageShape.setScaleType(ImageView.ScaleType.FIT_CENTER);
+
+                Constants.capturedImageBitmap = ((BitmapDrawable) cameraSelectedImageShape.getDrawable()).getBitmap();
+                //Log.e("Width ", cameraSelectedImageShape.getWidth() + "");
+                //Log.e("Height ", cameraSelectedImageShape.getHeight() + "");
+
+                mMyPrecfence.saveString(Constants.INTENT_TYPE, Constants.INTENT_TYPE_CAMERA);
                 try {
+                    //Bitmap mBitmap = createBitmapFromLayout(cameraSelectedImageRLayout);
 
-//                    Bitmap bitmap = Bitmap.createBitmap(mCameraRLayout.getWidth(), mCameraRLayout.getHeight(), Bitmap.Config.ARGB_8888);
-//                    bitmap = ThumbnailUtils.extractThumbnail(bitmap, mCameraRLayout.getWidth(), mCameraRLayout.getHeight());
+                    Bitmap mBitmap = createBitmapFromLayout(cameraSelectedImageShape);
+                    //ImageView End
+                    //Constants.galleryEditBitmapHeight  = cameraSelectedImageShape.getHeight();
+                    //Constants.galleryEditBitmapWidth  = cameraSelectedImageShape.getWidth();
 
-                    Uri uriCameraSelectedImage = Uri.fromFile(mImageFile);
+                    String imagePath =  Utilities.saveBitmap_Temp(mBitmap);
+                    File imgFile = new File(imagePath);
+                    if (imgFile.exists()) {
+                        Constants.imageUri = Uri.fromFile(imgFile);
+                    }
+
+                    Constants.done_Edited_ImageType_Collage ="false";
                     Intent intentCameraSelectedImage = new Intent(CameraActivity.this, EditImageActivity.class);
-                    intentCameraSelectedImage.putExtra(Constants.URI_COLLAGE_SELECTED_IMAGE, uriCameraSelectedImage);
+                    intentCameraSelectedImage.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    intentCameraSelectedImage.putExtra(Constants.URI_CAMERA, Constants.imageUri);
                     startActivity(intentCameraSelectedImage);
+
+                    cameraSelectedImageShape.setLayoutParams(
+                            new android.widget.RelativeLayout.LayoutParams(
+                                    ViewGroup.LayoutParams.MATCH_PARENT,
+                                    ViewGroup.LayoutParams.WRAP_CONTENT
+                            ) );
+
+                    cameraSelectedImageShape.setScaleType(ImageView.ScaleType.FIT_CENTER);
+
+
+
+                    Constants.capturedImageBitmap = ((BitmapDrawable)cameraSelectedImageShape.getDrawable()).getBitmap();
+                    //Constants.capturedImageBitmap =  createBitmapFromLayout(mGalleryRLayout);
+
+                    Constants.cameraEditBitmap = Constants.capturedImageBitmap;
+                    //Bitmap layoutBitmap = createBitmapFromLayout(mGalleryRLayout);
+                    Constants.cameraEditBitmapHeight  = Constants.cameraEditBitmap.getHeight();
+                    Constants.cameraEditBitmapWidth  = Constants.cameraEditBitmap.getWidth();
+
+                    //Bitmap layoutBitmap = createBitmapFromLayout(cameraSelectedImageShape);
+//                    Bitmap layoutBitmap = createBitmapFromLayout(mGalleryRLayout);
+//                    Constants.galleryEditBitmapHeight  = layoutBitmap.getHeight();
+//                    Constants.galleryEditBitmapWidth  = layoutBitmap.getWidth();
+
+                    cameraSelectedImageShape.setLayoutParams(
+                            new android.widget.RelativeLayout.LayoutParams(
+                                    ViewGroup.LayoutParams.MATCH_PARENT,
+                                    ViewGroup.LayoutParams.MATCH_PARENT
+                            ) );
+                    cameraSelectedImageShape.setScaleType(ImageView.ScaleType.FIT_CENTER);
+
 
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-
                 break;
-
         }
     }
+
 
     /**************Select Sub-Tolls  **********************/
+
     @Override
-    public void onToolsRecyclerSelected(ToolsRecyclerType toolsRecyclerType) {
-        switch (toolsRecyclerType) {
+    public void onCameraSubTollsSelected(CameraSubToolsType cameraSubToolsType) {
+        switch (cameraSubToolsType) {
 
-            case CROP:
-                mCameraListRecycleView.setVisibility(View.GONE);
-                cameraFilterView.setVisibility(View.GONE);
-                cameraEffectsSeekbarLLayout.setVisibility(View.GONE);
-                imageEffectsThumbnails.setVisibility(View.GONE);
-                mCameraFrameRecycleView.setVisibility(View.GONE);
-                cameraRecyclerLayout.setVisibility(View.VISIBLE);
-                toolsRecyclerView.setVisibility(View.VISIBLE);
+            case CAMERA_CROP:
 
-                Bitmap bitmap = ((BitmapDrawable)cameraSelectedImageShape.getDrawable()).getBitmap();
-                if(bitmap!=null) {
+                blankCameraLayoutBottom.setVisibility(View.VISIBLE);
+                cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
+                cameraEffectsLLayout.setVisibility(View.GONE);
+                cameraSubToolsLayout.setVisibility(View.GONE);
+                cameraSubToolsRecycler.setVisibility(View.GONE);
+
+                //Bitmap bitmap = createBitmapFromLayout(cameraSelectedImageRLayout);
+                Bitmap bitmap = ((BitmapDrawable) cameraSelectedImageShape.getDrawable()).getBitmap();
+                Constants.capturedImageBitmap = bitmap ;
+
+                if(bitmap!=null  ) {
                     cropImageUri(getImageUri(mContext, bitmap));
-                }else if(bitmap==null) {
-                    Toast.makeText(this , "You have not selected image.", Toast.LENGTH_SHORT).show();
+                }else  {
+                    //Toast.makeText(this , "Please try again.", Toast.LENGTH_SHORT).show();
+                    Log.e("you have not" , " clicked image.");
                 }
+                break;
+
+            case CAMERA_RT_LEFT:
+                angleRotation = angleRotation - 10;
+                cameraSelectedImageShape.setRotation(angleRotation);
+                break;
+
+            case CAMERA_RT_RIGHT:
+                angleRotation = angleRotation + 10;
+                cameraSelectedImageShape.setRotation(angleRotation);
+                break;
+
+            case CAMERA_RT_NONE:
+                angleRotation=0;
+                if (cameraSelectedImageShape != null) {
+                    cameraSelectedImageShape.setRotation(0);
+                }
+                fixAntiAlias(cameraSelectedImageShape);
 
                 break;
 
-            case ROTATION:
-                mCameraListRecycleView.setVisibility(View.GONE);
-                cameraFilterView.setVisibility(View.GONE);
-                cameraEffectsSeekbarLLayout.setVisibility(View.GONE);
-                imageEffectsThumbnails.setVisibility(View.GONE);
-                mCameraFrameRecycleView.setVisibility(View.GONE);
-                cameraRecyclerLayout.setVisibility(View.VISIBLE);
-                toolsRecyclerView.setVisibility(View.VISIBLE);
-                angle = angle - 10;
-                cameraSelectedImageShape.setRotation(angle);
-                break;
-
-            case RT_LEFT:
-                mCameraListRecycleView.setVisibility(View.GONE);
-                cameraFilterView.setVisibility(View.GONE);
-                cameraEffectsSeekbarLLayout.setVisibility(View.GONE);
-                imageEffectsThumbnails.setVisibility(View.GONE);
-                mCameraFrameRecycleView.setVisibility(View.GONE);
-                cameraRecyclerLayout.setVisibility(View.VISIBLE);
-                toolsRecyclerView.setVisibility(View.VISIBLE);
-
-                angle = angle - 10;
-                cameraSelectedImageShape.setRotation(angle);
-
-
-//                mSelectedImageBitMap.postRotate(-12, cameraSelectedImageShape.getMeasuredWidth() / 2,
-//                        cameraSelectedImageShape.getMeasuredHeight() / 2);
-//                cameraSelectedImageShape.setImageMatrix(mMatrixShape);
-
-                break;
-
-            case RT_RIGHT:
-                mCameraListRecycleView.setVisibility(View.GONE);
-                cameraFilterView.setVisibility(View.GONE);
-                cameraEffectsSeekbarLLayout.setVisibility(View.GONE);
-                imageEffectsThumbnails.setVisibility(View.GONE);
-                mCameraFrameRecycleView.setVisibility(View.GONE);
-                cameraRecyclerLayout.setVisibility(View.VISIBLE);
-                toolsRecyclerView.setVisibility(View.VISIBLE);
-
-                angle = angle + 10;
-                cameraSelectedImageShape.setRotation(angle);
-
-//                mMatrixShape.postRotate(12, cameraSelectedImageShape.getMeasuredWidth() / 2,
-//                        cameraSelectedImageShape.getMeasuredHeight() / 2);
-//                cameraSelectedImageShape.setImageMatrix(mMatrixShape);
-
-                break;
-
-            case FLIP:
-
-                mCameraListRecycleView.setVisibility(View.GONE);
-                cameraFilterView.setVisibility(View.GONE);
-                cameraEffectsSeekbarLLayout.setVisibility(View.GONE);
-                imageEffectsThumbnails.setVisibility(View.GONE);
-                mCameraFrameRecycleView.setVisibility(View.GONE);
-
-                cameraRecyclerLayout.setVisibility(View.VISIBLE);
-                toolsRecyclerView.setVisibility(View.VISIBLE);
+            case CAMERA_FLIP:
 
                 cameraSelectedImageShape.setImageBitmap(flipImage(((BitmapDrawable) cameraSelectedImageShape.getDrawable()).getBitmap()));
-
-//                Matrix matrix = new Matrix();
-//                //matrix.postScale(-1.0f, 1.0f);
-//                matrix.postScale(-1.0f, 1.0f, cameraSelectedImageShape.getWidth() / 2f,
-//                        cameraSelectedImageShape.getHeight() / 2f);
-//                Bitmap  flipImageBitMap = Bitmap.createBitmap(mSelectedImageBitMap, 0, 0, mSelectedImageBitMap.getWidth(), mSelectedImageBitMap.getHeight(), matrix, true);
-//                cameraSelectedImageShape.setImageBitmap(flipImageBitMap);
-//                mMatrixShape.postScale(-1.0f, 1.0f, cameraSelectedImageShape.getWidth() / 2f,
-//                        cameraSelectedImageShape.getHeight() / 2f);
-//                cameraSelectedImageShape.setImageMatrix(mMatrixShape);
-
+                addToUndoReodList();
+                //Bitmap flipBitmap = createBitmapFromLayout(cameraSelectedImageRLayout);
+                Constants.capturedImageBitmap = ((BitmapDrawable) cameraSelectedImageShape.getDrawable()).getBitmap();
+                setFiltersImage();
                 break;
-
-
         }
     }
 
 
-
-
-
-    private void sendTakePictureIntent() {
-
-        Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        cameraIntent.putExtra( MediaStore.EXTRA_FINISH_ON_COMPLETION, true);
-        if (cameraIntent.resolveActivity(getPackageManager()) != null) {
-            File pictureFile = null;
-            try {
-                pictureFile = getPictureFile();
-            } catch (IOException ex) {
-                Toast.makeText(mContext,
-                        "Photo file can't be created, please try again",
-                        Toast.LENGTH_SHORT).show();
-                return;
-            }
-            if (pictureFile != null) {
-                Uri photoURI = FileProvider.getUriForFile(mContext,
-                        "com.mojodigi.selfiepro.fileprovider",
-                        pictureFile);
-                cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
-
-                startActivityForResult(cameraIntent, PICK_CAMERA_REQUEST);
-            }
-        }
-    }
-
-    private File getPictureFile() throws IOException {
-        // Create an image file name
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String imageFileName = "JPEG_" + timeStamp + "_";
-        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-        File image = File.createTempFile(
-                imageFileName,  /* prefix */
-                ".jpg",         /* suffix */
-                storageDir      /* directory */
-        );
-        // Save a file: path for use with ACTION_VIEW intents
-        pictureFilePath = image.getAbsolutePath();
-        return image;
-
-    }
-
-
-    private void bindDataToAdapter() {
-
-        final Context context = this.getApplication();
-        Handler handler = new Handler();
-
-        Runnable r = new Runnable() {
-            public void run() {
-                Bitmap bitmapDrawable =  ((BitmapDrawable) cameraSelectedImageShape.getDrawable()).getBitmap();
-
-                //Bitmap thumbImage = Bitmap.createScaledBitmap(BitmapFactory.decodeResource(context.getResources(), R.drawable.photo), 640, 640, false);
-                //Bitmap thumbImage = Bitmap.createScaledBitmap(bitmapDrawable,  bitmapDrawable.getWidth(),bitmapDrawable.getHeight() , false);
-
-                //Bitmap thumbImage = Bitmap.createScaledBitmap(mSelectedImageBitMap,  700, 900, false);
-
-             Bitmap thumbImage = Bitmap.createScaledBitmap(mSelectedImageBitMap,  cameraSelectedImageShape.getWidth(), cameraSelectedImageShape.getHeight() , false);
-                //  Bitmap thumbImage = Bitmap.createScaledBitmap(mSelectedImageBitMap,  700, 900 , false);
-
-                //Bitmap thumbImage =imageBitmap;
-                //imageBitmapTosave = mSelectedImageBitMap;
-
-                ThumbnailItem t1 = new ThumbnailItem();
-                ThumbnailItem t2 = new ThumbnailItem();
-                ThumbnailItem t3 = new ThumbnailItem();
-                ThumbnailItem t4 = new ThumbnailItem();
-                ThumbnailItem t5 = new ThumbnailItem();
-                ThumbnailItem t6 = new ThumbnailItem();
-                ThumbnailItem t7 = new ThumbnailItem();
-                ThumbnailItem t8 = new ThumbnailItem();
-
-
-                t1.image = thumbImage;
-                t2.image = thumbImage;
-                t3.image = thumbImage;
-                t4.image = thumbImage;
-                t5.image = thumbImage;
-                t6.image = thumbImage;
-                t7.image = thumbImage;
-                t8.image = thumbImage;
-
-
-                ThumbnailsManager.clearThumbs();
-                ThumbnailsManager.addThumb(t1); // Original Image
-
-                t2.filter = SampleFilters.getStarLitFilter();
-                ThumbnailsManager.addThumb(t2);
-
-                t3.filter = SampleFilters.getBlueMessFilter();
-                ThumbnailsManager.addThumb(t3);
-
-                t4.filter = SampleFilters.getAweStruckVibeFilter();
-                ThumbnailsManager.addThumb(t4);
-
-                t5.filter = SampleFilters.getLimeStutterFilter();
-                ThumbnailsManager.addThumb(t5);
-
-                t6.filter = SampleFilters.getNightWhisperFilter();
-                ThumbnailsManager.addThumb(t6);
-
-                t7.filter = SampleFilters.getStarLitFilter();
-                ThumbnailsManager.addThumb(t7);
-
-                t8.filter = SampleFilters.getBlueMessFilter();
-                ThumbnailsManager.addThumb(t8);
-
-                List<ThumbnailItem> thumbs = ThumbnailsManager.processThumbs(context);
-
-                ThumbnailsAdapter adapter = new ThumbnailsAdapter(thumbs, (ThumbnailCallback) instance);
-                imageEffectsThumbnails.setAdapter(adapter);
-                adapter.notifyDataSetChanged();
-            }
-        };
-        handler.post(r);
-    }
-
-
-    @Override
-    public void onThumbnailClick(Filter filter) {
-        Bitmap bitmapDrawable =  ((BitmapDrawable) cameraSelectedImageShape.getDrawable()).getBitmap();
-        //cameraSelectedImageShape.setImageBitmap(filter.processFilter(((BitmapDrawable) cameraSelectedImageShape.getDrawable()).getBitmap()));
-        //cameraSelectedImageShape.setImageBitmap(filter.processFilter(Bitmap.createScaledBitmap(bitmapDrawable, 700,900 ,false )));
-
-        cameraSelectedImageShape.setImageBitmap(filter.processFilter(Bitmap.createScaledBitmap(mSelectedImageBitMap, cameraSelectedImageShape.getWidth(), cameraSelectedImageShape.getHeight() ,false )));
-
-        //cameraSelectedImageShape.setImageBitmap(filter.processFilter(Bitmap.createScaledBitmap(mSelectedImageBitMap, 700, 900 ,false )));
-        //imageBitmapTosave = filter.processFilter(Bitmap.createScaledBitmap(mSelectedImageBitMap, 700,900 ,false ));
-
-
-//          Bitmap bitmapDrawable =  ((BitmapDrawable) cameraSelectedImageShape.getDrawable()).getBitmap();
-//        cameraSelectedImageShape.setImageBitmap(filter.processFilter(((BitmapDrawable) cameraSelectedImageShape.getDrawable()).getBitmap()));
-//         cameraSelectedImageShape.setImageBitmap(filter.processFilter(Bitmap.createScaledBitmap(bitmapDrawable, bitmapDrawable.getWidth(),bitmapDrawable.getHeight() ,false )));
-//        //imageBitmapTosave = filter.processFilter(Bitmap.createScaledBitmap(mSelectedImageBitMap, 640,640 ,false ));
-
-
-
-
-
-    }
-
-
-    private String saveImage() {
-
-        OutputStream output;
-        Calendar cal = Calendar.getInstance();
-
-        Bitmap bitmap = Bitmap.createBitmap(mCameraRLayout.getWidth(), mCameraRLayout.getHeight(), Bitmap.Config.ARGB_8888);
-
-        bitmap = ThumbnailUtils.extractThumbnail(bitmap, mCameraRLayout.getWidth(), mCameraRLayout.getHeight());
-
-        Canvas mBitCanvas = new Canvas(bitmap);
-        mCameraRLayout.draw(mBitCanvas);
-
-        // Find the SD Card path
-        File filepath = Environment.getExternalStorageDirectory();
-
-        // Create a new folder in SD Card
-        File dir = new File(filepath.getAbsolutePath() + "/SelfiePro/");
-        dir.mkdirs();
-
-        mImageName = "SelfiePro" + cal.getTimeInMillis() + ".png";
-
-        // Create a name for the saved image
-        mImageFile = new File(dir, mImageName);
-        runMediaScan( mContext, mImageFile);
-        // Show a toast message on successful save
-        Toast.makeText(CameraActivity.this, "Image Saved Successfully", Toast.LENGTH_SHORT).show();
-
-        try {
-            output = new FileOutputStream(mImageFile);
-            // Compress into png format image from 0% - 100%
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, output);
-            output.flush();
-            output.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return mImageName;
-    }
-
-
-    private String editImage() {
-
-        OutputStream output;
-        Calendar cal = Calendar.getInstance();
-
-        Bitmap bitmap = Bitmap.createBitmap(mCameraRLayout.getWidth(), mCameraRLayout.getHeight(), Bitmap.Config.ARGB_8888);
-        //Bitmap bitmap = Bitmap.createBitmap(cameraSelectedImageShape.getWidth(), cameraSelectedImageShape.getHeight(), Bitmap.Config.ARGB_8888);
-        bitmap = ThumbnailUtils.extractThumbnail(bitmap, mCameraRLayout.getWidth(), mCameraRLayout.getHeight());
-        // bitmap = ThumbnailUtils.extractThumbnail(bitmap, cameraSelectedImageShape.getWidth(), cameraSelectedImageShape.getHeight());
-        Canvas mBitCanvas = new Canvas(bitmap);
-        mCameraRLayout.draw(mBitCanvas);
-        //cameraSelectedImageShape.draw(mBitCanvas);
-
-        // Find the SD Card path
-        File filepath = Environment.getExternalStorageDirectory();
-
-        // Create a new folder in SD Card
-        File dir = new File(filepath.getAbsolutePath() + "/SelfiePro/");
-        dir.mkdirs();
-
-        mImageName = "SelfiePro" + cal.getTimeInMillis() + ".png";
-
-        // Create a name for the saved image
-        mImageFile = new File(dir, mImageName);
-        // runMediaScan( mContext, mImageFile);
-        // Show a toast message on successful save
-        //Toast.makeText(GallerySelectedActivity.this, "Image Saved Successfully", Toast.LENGTH_SHORT).show();
-
-        try {
-            output = new FileOutputStream(mImageFile);
-            // Compress into png format image from 0% - 100%
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, output);
-            output.flush();
-            output.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return mImageName;
-    }
-
-    public void runMediaScan(Context context, File fileName) {
-        MediaScannerConnection.scanFile(
-                context, new String[]{fileName.getPath()}, null,
-                new MediaScannerConnection.MediaScannerConnectionClient() {
-                    @Override
-                    public void onMediaScannerConnected() {
-                        Log.e("acn ","connected");
-                    }
-
-                    @Override
-                    public void onScanCompleted(String path, Uri uri) {
-                        Log.e("scan " , "completed" );
-                    }
-                });
-    }
-
-
-    //Method to do flip action
-    private Bitmap flipImage(Bitmap image_bitmap) {
-        Matrix matrix = new Matrix();
-        matrix.preScale(-1.0f, 1.0f);
-        Bitmap flipped_bitmap = Bitmap.createBitmap(image_bitmap, 0, 0, image_bitmap.getWidth(), image_bitmap.getHeight(), matrix, true);
-        return flipped_bitmap;
-    }
-
-
-    @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        //show_alert_back("Exit", "Are you sure you want to exit Editor ?");
-
-        mMyPrecfence.saveString(Constants.COLLAGE_ACTIVITY , "false");
-        // current activity
-        finish();
-
-        return super.onKeyDown(keyCode, event);
-
-    }
-
-
-
-
-
-
-
-
-
-
-    protected void cropImageUri(Uri picUri) {
-        try {
-            // Intent intent = new Intent("com.android.camera.action.CROP");
-            Intent intent = new Intent("com.android.camera.action.CROP" , android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-            intent.setDataAndType(picUri, "image/*");
-
-            intent.putExtra("crop", "true");
-            intent.putExtra("outputX", 200);
-            intent.putExtra("outputY", 200);
-            intent.putExtra("aspectX", 3);
-            intent.putExtra("aspectY", 4);
-            intent.putExtra("scaleUpIfNeeded", true);
-            intent.putExtra("return-data", true);
-
-            startActivityForResult(intent, CROP_IMAGE);
-
-        } catch (ActivityNotFoundException e) {
-            Log.e("", "Your device doesn't support the crop action!");
-        }
-
-    }
-
-
-
-    private Uri getImageUri(Context context, Bitmap inImage) {
-        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-        inImage.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
-        String path = MediaStore.Images.Media.insertImage(context.getContentResolver(), inImage, "Title", null);
-        return Uri.parse(path);
-    }
-
-
-
-    public void show_alert_back(String title, String msg) {
-
-        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(CameraActivity.this);
-        // set title
-        alertDialogBuilder.setTitle(title);
-        // set dialog message
-        alertDialogBuilder
-                .setMessage(msg)
-                .setCancelable(true)
-                .setIcon(R.drawable.ic_launcher).setNegativeButton("No", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.cancel();
-            }
-        }).setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int id) {
-                // if this button is clicked, close
-                mMyPrecfence.saveString(Constants.COLLAGE_ACTIVITY , "false");
-                // current activity
-                finish();
-            }
-        });
-
-        // create alert dialog
-        AlertDialog alertDialog = alertDialogBuilder.create();
-        alertDialog.setCancelable(false);
-        // show it
-        alertDialog.show();
-
-        Button b = alertDialog.getButton(DialogInterface.BUTTON_POSITIVE);
-        Button b1 = alertDialog.getButton(DialogInterface.BUTTON_NEGATIVE);
-
-        if (b != null)
-            b.setTextColor(getResources().getColor(R.color.colorAccent));
-        if (b1 != null)
-            b1.setTextColor(getResources().getColor(R.color.colorAccent));
-    }
-
-
-
-
+    /************************Brightness / Contrast Start*******************/
     @Override
     public void onProgressChanged(SeekBar seekBar, int progress, boolean b) {
-        if (cameraSelectedImageShape != null) {
+        if (adjustCameraPhotoView != null) {
             if (seekBar.getId() == R.id.cameraBrightness) {
-                increaseBrightness(cameraSelectedImageShape, progress);
+                increaseBrightness(adjustCameraPhotoView, progress);
+                progressBright = progress;
             }
             if (seekBar.getId() == R.id.cameraContrast) {
-                increaseContrast(cameraSelectedImageShape, progress);
+                increaseContrast(adjustCameraPhotoView, progress);
+                progressContrast = progress;
+
             }
         }
     }
-
 
     @Override
     public void onStartTrackingTouch(SeekBar seekBar) {
     }
     @Override
     public void onStopTrackingTouch(SeekBar seekBar) {
+        //addToUndoReodList();
     }
-
 
     private void increaseBrightness(ImageView mImageView, int progressValue){
         mImageView.setColorFilter(ColorFilterGenerator.adjustBrightness(progressValue));
@@ -1116,96 +1103,549 @@ public class CameraActivity  extends AppCompatActivity implements OnPhotoEditorL
     }
 
 
+    /************************Brightness / Contrast End*******************/
 
 
+    /*****************Undo/Redo Start****************/
 
+    private void addToUndoReodList(){
 
-    private boolean imageSelectedOrNot(){
-        imageSelectedOrNot = false;
-        if (isSelectedImage) {
-            return imageSelectedOrNot = true;
+        hideShowUndoRedo();
+
+        Bitmap mainBitmap = ((BitmapDrawable) cameraSelectedImageShape.getDrawable()).getBitmap();
+
+        String imagePath =  Utilities.saveBitmap_Temp(mainBitmap);
+        File imgFile = new File(imagePath);
+        if (imgFile.exists()) {
+            Constants.imageUri = Uri.fromFile(imgFile);
+            mainPathUri = Constants.imageUri ;
+            //Log.e("added Undo/Reod Uri ", Constants.imageUri+"");
         }
-        else   {
-            return imageSelectedOrNot = false;
+
+        pathForTempList.add(mainPathUri);
+        currentShowingIndex = currentShowingIndex+1;
+
+        //Log.e("added List Size", pathForTempList.size()+"");
+        //Log.e("Index " ,  currentShowingIndex+"");
+
+        hideShowUndoRedo();
+    }
+
+    private void onUndoPressed( ) {
+        String mUri = getUndoPath();
+        File imgFile = new File(mUri);
+        if (imgFile.exists()) {
+            Constants.imageUri = Uri.fromFile(imgFile);
+            mainPathUri = Constants.imageUri ;
+        }
+        Bitmap bitmap = null;
+        try {
+            bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), mainPathUri);
+            Constants.capturedImageBitmap = bitmap;
+
+            cameraSelectedImageShape.setScaleType(ImageView.ScaleType.FIT_CENTER);
+            cameraSelectedImageShape.setImageBitmap(bitmap);
+            cameraSelectedImageShape.setRotation(0);
+            fixAntiAlias(cameraSelectedImageShape);
+
+            hideShowUndoRedo();
+
+            increaseBrightness(cameraSelectedImageShape, 0);
+            increaseContrast(cameraSelectedImageShape, 0);
+            cameraBrightness.setProgress(0);
+            cameraContrast.setProgress(0);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+    }
+
+    private String getUndoPath() {
+        if(currentShowingIndex >=1 && currentShowingIndex!=pathForTempList.size()) {
+            currentShowingIndex = currentShowingIndex - 1;
+        }
+        else if(currentShowingIndex > 1 && currentShowingIndex==pathForTempList.size() ){
+            currentShowingIndex = currentShowingIndex - 2;}
+        else {
+            currentShowingIndex =0;
+        }
+        // Log.e("getUndoPath ", currentShowingIndex + "");
+        return pathForTempList.get(currentShowingIndex).getPath();
+    }
+
+    private void onRedoPressed( ) {
+        String   mUri = getRedoPath();
+        File imgFile = new File(mUri);
+        if (imgFile.exists()) {
+            Constants.imageUri = Uri.fromFile(imgFile);
+            mainPathUri = Constants.imageUri ;
+        }
+        Bitmap bitmap = null;
+        try {
+            bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), mainPathUri);
+            Constants.capturedImageBitmap = bitmap;
+
+            cameraSelectedImageShape.setScaleType(ImageView.ScaleType.FIT_CENTER);
+            cameraSelectedImageShape.setImageBitmap(bitmap);
+            cameraSelectedImageShape.setRotation(0);
+            fixAntiAlias(cameraSelectedImageShape);
+
+            hideShowUndoRedo();
+
+            increaseBrightness(cameraSelectedImageShape, 0);
+            increaseContrast(cameraSelectedImageShape, 0);
+            cameraBrightness.setProgress(0);
+            cameraContrast.setProgress(0);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private String getRedoPath() {
+        currentShowingIndex  = currentShowingIndex+1 ;
+        //  Log.e("getRedoPath ", currentShowingIndex + "");
+        return pathForTempList.get(currentShowingIndex).getPath();
+    }
+
+    private void hideShowUndoRedo(){
+        Log.e("Hide Show Size ", pathForTempList.size() + "");
+        Log.e("Hide Show Index ", currentShowingIndex + "");
+        if(pathForTempList.size()<=1)
+        {
+            hideUndo();
+            hideRedo();
+        }
+        if(pathForTempList.size()>1 &&  currentShowingIndex==0 )
+        {
+            hideUndo();
+            showRedo();
+        }
+        if(pathForTempList.size()>1 && currentShowingIndex!=0 && currentShowingIndex!=pathForTempList.size()-1 )
+        {
+            showUndo();
+            showRedo();
+        }
+        if(pathForTempList.size()>1 && currentShowingIndex==pathForTempList.size()-1){
+            showUndo();
+            hideRedo();
+        }
+        if(pathForTempList.size()>1 && currentShowingIndex==pathForTempList.size()){
+            showUndo();
+            hideRedo();
+        }
+        if(pathForTempList.size()>1 && currentShowingIndex>pathForTempList.size()){
+            showUndo();
+            hideRedo();
+        }
+
+
+    }
+
+
+    private void showUndo() {
+        undoCameraImageView.setImageResource(R.drawable.ic_undo);
+        undoCameraTextView.setTextColor(getResources().getColor(R.color.color_icon));
+    }
+    private void hideUndo() {
+        undoCameraImageView.setImageResource(R.drawable.ic_undo_none);
+        undoCameraTextView.setTextColor(getResources().getColor(R.color.undo_redo_none));
+    }
+    private void showRedo() {
+        redoCameraImageView.setImageResource(R.drawable.ic_redo);
+        redoCameraTextView.setTextColor(getResources().getColor(R.color.color_icon));
+    }
+    private void hideRedo() {
+        redoCameraImageView.setImageResource(R.drawable.ic_redo_none);
+        redoCameraTextView.setTextColor(getResources().getColor(R.color.undo_redo_none));
+    }
+
+    /*****************Undo/Redo End****************/
+
+
+    //Method to do flip action
+    public  Bitmap flipImage(Bitmap image_bitmap) {
+        Matrix matrix = new Matrix();
+        matrix.preScale(-1.0f, 1.0f);
+        Bitmap flipped_bitmap = Bitmap.createBitmap(image_bitmap, 0, 0, image_bitmap.getWidth(), image_bitmap.getHeight(), matrix, true);
+
+        return flipped_bitmap;
+    }
+
+    private Uri getImageUri(Context context, Bitmap inImage) {
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        inImage.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
+        String path = MediaStore.Images.Media.insertImage(context.getContentResolver(), inImage, "Title", null);
+        return Uri.parse(path);
+    }
+
+    public Bitmap createBitmapFromLayout(View view){
+        Bitmap bitmap = Bitmap.createBitmap(view.getWidth(), view.getHeight(), Bitmap.Config.ARGB_8888);
+        bitmap = ThumbnailUtils.extractThumbnail(bitmap, view.getWidth(), view.getHeight());
+        Canvas mBitCanvas = new Canvas(bitmap);
+        view.draw(mBitCanvas);
+        return bitmap;
+    }
+
+    private void sendTakePictureIntent() {
+        Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        cameraIntent.putExtra( MediaStore.EXTRA_FINISH_ON_COMPLETION, true);
+        if (cameraIntent.resolveActivity(getPackageManager()) != null) {
+            File pictureFile = null;
+            try {
+                pictureFile = getPictureFile();
+            } catch (IOException ex) {
+                ex.printStackTrace();
+                return;
+            }
+            if (pictureFile != null) {
+                Uri photoURI = FileProvider.getUriForFile(this,getPackageName() +".provider",  pictureFile);
+                cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+                startActivityForResult(cameraIntent, REQUEST_TYPE_CAMERA);
+            }
         }
     }
 
+    private File getPictureFile() throws IOException {
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
+        String imageFileName = "JPEG_" + timeStamp + "_";
+        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        File image = File.createTempFile( imageFileName,  ".jpg",    storageDir );
+        // Save a file: path for use with ACTION_VIEW intents
+        pictureFilePath = image.getAbsolutePath();
+        return image;
+    }
+
+
+
+
+    /*************************Crop Image Start**********************************/
+    private void cropImageUri(Uri sourceUri) {
+        Uri destinationUri = Uri.fromFile(new File(getCacheDir(), queryName(getContentResolver(), sourceUri)));
+        UCrop.Options options = new UCrop.Options();
+        options.setCompressionQuality(100);
+
+        // applying UI theme
+        options.setStatusBarColor(ContextCompat.getColor(this, R.color.colorPrimaryDark));
+        options.setToolbarColor(ContextCompat.getColor(this, R.color.colorPrimary));
+        options.setActiveWidgetColor(ContextCompat.getColor(this, R.color.colorPrimary));
+
+        UCrop.of(sourceUri, destinationUri)
+                .withOptions(options)
+                .start(this);
+    }
+
+
+    private static String queryName(ContentResolver resolver, Uri uri) {
+        Cursor returnCursor =
+                resolver.query(uri, null, null, null, null);
+        assert returnCursor != null;
+        int nameIndex = returnCursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+        returnCursor.moveToFirst();
+        String name = returnCursor.getString(nameIndex);
+        returnCursor.close();
+        return name;
+    }
+    /*************************Crop Image End**********************************/
+
+
+    public void show_alert_back(String title, String msg) {
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(CameraActivity.this);
+        // set title
+        alertDialogBuilder.setTitle(title);
+        // set dialog message
+        alertDialogBuilder
+                .setMessage(msg)
+                .setCancelable(true)
+                .setIcon(R.mipmap.ic_launcher_round).setNegativeButton("No", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+                finish();
+            }
+        }).setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+
+                //Bitmap bitmap = ((BitmapDrawable) cameraSelectedImageShape.getDrawable()).getBitmap();
+                Bitmap bitmap = createBitmapFromLayout(cameraSelectedImageRLayout);
+                Utilities.saveSelfieProImage(mContext , bitmap);
+
+                finish();
+            }
+        });
+
+
+
+        // create alert dialog
+        AlertDialog alertDialog = alertDialogBuilder.create();
+        alertDialog.setCancelable(false);
+        // show it
+        try {
+            alertDialog.show();
+        } catch (Exception e) {
+            alertDialog.dismiss();
+        }
+
+        Button b = alertDialog.getButton(DialogInterface.BUTTON_POSITIVE);
+        Button b1 = alertDialog.getButton(DialogInterface.BUTTON_NEGATIVE);
+
+        if (b != null)
+            b.setTextColor(getResources().getColor(R.color.green_color_picker));
+        if (b1 != null)
+            b1.setTextColor(getResources().getColor(R.color.colorAccent));
+    }
+
+    private void deleteTempExtraFile()
+    {
+        try {
+            File directory = new File(Constants.tempfolder);
+            File[] fList = directory.listFiles();
+            Log.e("Files are ", fList+"");
+            for (File file : fList) {
+                if (file.isFile() && file.exists()) {
+                    file.delete();
+                }
+                else{
+                    Log.e("Files are ", " not available.");
+                }
+            }
+            pathForTempList.clear();
+            currentShowingIndex=0;
+        }catch (Exception ex)
+        {
+            ex.printStackTrace();
+        }
+    }
+
+
+
+    @SuppressLint("ObsoleteSdkInt")
+    public void fixAntiAlias(View viewAntiAlias) {
+        if (android.os.Build.VERSION.SDK_INT >= 11) {
+            viewAntiAlias.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+        }
+        if (Build.VERSION.SDK_INT > 10) {
+            Paint p = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.DITHER_FLAG | Paint.FILTER_BITMAP_FLAG);
+            viewAntiAlias.setLayerType(View.LAYER_TYPE_SOFTWARE, p);
+            ((View) viewAntiAlias.getParent()).setLayerType(View.LAYER_TYPE_SOFTWARE, p);
+        }
+    }
+
+
+    /*************Compress Image Start************/
+    public String compressImage(String imageUri) {
+
+        String filePath = getRealPathFromURI(imageUri);
+        Bitmap scaledBitmap = null;
+
+        BitmapFactory.Options options = new BitmapFactory.Options();
+
+//      by setting this field as true, the actual bitmap pixels are not loaded in the memory. Just the bounds are loaded. If
+//      you try the use the bitmap here, you will get null.
+        options.inJustDecodeBounds = true;
+        Bitmap bmp = BitmapFactory.decodeFile(filePath, options);
+
+        int actualHeight = options.outHeight;
+        int actualWidth = options.outWidth;
+
+//      max Height and width values of the compressed image is taken as 816x612
+
+        float maxHeight = 816.0f;
+        float maxWidth = 612.0f;
+        float imgRatio = actualWidth / actualHeight;
+        float maxRatio = maxWidth / maxHeight;
+
+//      width and height values are set maintaining the aspect ratio of the image
+
+        if (actualHeight > maxHeight || actualWidth > maxWidth) {
+            if (imgRatio < maxRatio) {
+                imgRatio = maxHeight / actualHeight;
+                actualWidth = (int) (imgRatio * actualWidth);
+                actualHeight = (int) maxHeight;
+            } else if (imgRatio > maxRatio) {
+                imgRatio = maxWidth / actualWidth;
+                actualHeight = (int) (imgRatio * actualHeight);
+                actualWidth = (int) maxWidth;
+            } else {
+                actualHeight = (int) maxHeight;
+                actualWidth = (int) maxWidth;
+
+            }
+        }
+
+//      setting inSampleSize value allows to load a scaled down version of the original image
+
+        options.inSampleSize = calculateInSampleSize(options, actualWidth, actualHeight);
+
+//      inJustDecodeBounds set to false to load the actual bitmap
+        options.inJustDecodeBounds = false;
+
+//      this options allow android to claim the bitmap memory if it runs low on memory
+        options.inPurgeable = true;
+        options.inInputShareable = true;
+        options.inTempStorage = new byte[16 * 1024];
+
+        try {
+//          load the bitmap from its path
+            bmp = BitmapFactory.decodeFile(filePath, options);
+        } catch (OutOfMemoryError exception) {
+            exception.printStackTrace();
+
+        }
+        try {
+            scaledBitmap = Bitmap.createBitmap(actualWidth, actualHeight, Bitmap.Config.ARGB_8888);
+        } catch (OutOfMemoryError exception) {
+            exception.printStackTrace();
+        }
+
+        float ratioX = actualWidth / (float) options.outWidth;
+        float ratioY = actualHeight / (float) options.outHeight;
+        float middleX = actualWidth / 2.0f;
+        float middleY = actualHeight / 2.0f;
+
+        Matrix scaleMatrix = new Matrix();
+        scaleMatrix.setScale(ratioX, ratioY, middleX, middleY);
+
+        Canvas canvas = new Canvas(scaledBitmap);
+        canvas.setMatrix(scaleMatrix);
+        canvas.drawBitmap(bmp, middleX - bmp.getWidth() / 2, middleY - bmp.getHeight() / 2, new Paint(Paint.FILTER_BITMAP_FLAG));
+
+//      check the rotation of the image and display it properly
+        ExifInterface exif;
+        try {
+            exif = new ExifInterface(filePath);
+
+            int orientation = exif.getAttributeInt(
+                    ExifInterface.TAG_ORIENTATION, 0);
+            Log.d("EXIF", "Exif: " + orientation);
+            Matrix matrix = new Matrix();
+            if (orientation == 6) {
+                matrix.postRotate(90);
+                Log.d("EXIF", "Exif: " + orientation);
+            } else if (orientation == 3) {
+                matrix.postRotate(180);
+                Log.d("EXIF", "Exif: " + orientation);
+            } else if (orientation == 8) {
+                matrix.postRotate(270);
+                Log.d("EXIF", "Exif: " + orientation);
+            }
+            scaledBitmap = Bitmap.createBitmap(scaledBitmap, 0, 0,
+                    scaledBitmap.getWidth(), scaledBitmap.getHeight(), matrix,
+                    true);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        FileOutputStream out = null;
+        String filename = getFilename();
+        try {
+            out = new FileOutputStream(filename);
+
+//          write the compressed bitmap at the destination specified by filename.
+            scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 80, out);
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        return filename;
+
+    }
+
+    public String getFilename() {
+        File file = new File(Environment.getExternalStorageDirectory().getPath(), "MyFolder/Images");
+        if (!file.exists()) {
+            file.mkdirs();
+        }
+        String uriSting = (file.getAbsolutePath() + "/" + System.currentTimeMillis() + ".jpg");
+        return uriSting;
+    }
+
+    private String getRealPathFromURI(String contentURI) {
+        Uri contentUri = Uri.parse(contentURI);
+        Cursor cursor = getContentResolver().query(contentUri, null, null, null, null);
+        if (cursor == null) {
+            return contentUri.getPath();
+        } else {
+            cursor.moveToFirst();
+            int index = cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA);
+            return cursor.getString(index);
+        }
+    }
+
+    public int calculateInSampleSize(BitmapFactory.Options options, int reqWidth, int reqHeight) {
+        final int height = options.outHeight;
+        final int width = options.outWidth;
+        int inSampleSize = 1;
+
+        if (height > reqHeight || width > reqWidth) {
+            final int heightRatio = Math.round((float) height / (float) reqHeight);
+            final int widthRatio = Math.round((float) width / (float) reqWidth);
+            inSampleSize = heightRatio < widthRatio ? heightRatio : widthRatio;
+        }
+        final float totalPixels = width * height;
+        final float totalReqPixelsCap = reqWidth * reqHeight * 2;
+        while (totalPixels / (inSampleSize * inSampleSize) > totalReqPixelsCap) {
+            inSampleSize++;
+        }
+
+        return inSampleSize;
+    }
+    /*************Compress Image End************/
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        //finish();
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            onBackPressed();
+        }
+        return super.onKeyDown(keyCode, event);
+    }
 
     @Override
     public void onBackPressed() {
-        super.onBackPressed();
-
-        show_alert_back("Exit", "Are you sure you want to exit Editor ?");
+        //super.onBackPressed();
+        show_alert_back("Exit", "You want to save changes ?");
+        return;
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
 
-    public static Bitmap generateCircularBitmap(Bitmap input) {
-
-        final int width = input.getWidth();
-        final int height = input.getHeight();
-        final Bitmap outputBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-
-        final Path path = new Path();
-        path.addCircle(
-                (float) (width / 2)
-                , (float) (height / 2)
-                , (float) Math.min(width, (height / 2))
-                , Path.Direction.CCW
-        );
-
-        final Canvas canvas = new Canvas(outputBitmap);
-        canvas.clipPath(path);
-        canvas.drawBitmap(input, 0, 0, null);
-        return outputBitmap;
+        deleteTempExtraFile();
     }
 
-
-
-    public void openGallery(int PICK_GALLARY_REQUEST) {
-
-        if (isKitKat) {
-            Intent intent = new Intent(android.content.Intent.ACTION_OPEN_DOCUMENT);
-            intent.addCategory(android.content.Intent.CATEGORY_OPENABLE);
-            intent.setType("image/*");
-            startActivityForResult(android.content.Intent.createChooser(intent, "Select picture"), PICK_GALLARY_REQUEST);
+    public Bitmap getResizedBitmap(Bitmap image, int maxSize) {
+        int width = image.getWidth();
+        int height = image.getHeight();
+        float bitmapRatio = (float)width / (float) height;
+        if (bitmapRatio > 1) {
+            width = maxSize;
+            height = (int) (width / bitmapRatio);
         } else {
-            Intent intent = new Intent();
-            intent.setType("image/*");
-            intent.setAction(android.content.Intent.ACTION_GET_CONTENT);
-            startActivityForResult(android.content.Intent.createChooser(intent, "Select picture"), PICK_GALLARY_REQUEST);
+            height = maxSize;
+            width = (int) (height * bitmapRatio);
         }
+        return Bitmap.createScaledBitmap(image, width, height, true);
     }
 
-
-    @Override
-    public void onEditTextChangeListener(View rootView, String text, int colorCode) {
-
+    private  int getScreenWidth() {
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        int width = displayMetrics.widthPixels;
+        return  width;
     }
 
-    @Override
-    public void onAddViewListener(ViewType viewType, int numberOfAddedViews) {
-
+    private  int getScreenHeight() {
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        int width = displayMetrics.heightPixels;
+        return  width;
     }
-
-    @Override
-    public void onRemoveViewListener(int numberOfAddedViews) {
-
-    }
-
-    @Override
-    public void onRemoveViewListener(ViewType viewType, int numberOfAddedViews) {
-
-    }
-
-    @Override
-    public void onStartViewChangeListener(ViewType viewType) {
-
-    }
-
-    @Override
-    public void onStopViewChangeListener(ViewType viewType) {
-
-    }
-
 
 }
+

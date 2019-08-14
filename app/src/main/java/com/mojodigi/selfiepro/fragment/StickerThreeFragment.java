@@ -80,9 +80,12 @@ public class StickerThreeFragment extends BottomSheetDialogFragment {
 
     public class StickerAdapter extends RecyclerView.Adapter<StickerThreeFragment.StickerAdapter.ViewHolder> {
 
-        int[] stickerThreeList = new int[]{R.drawable.sticker_32,R.drawable.sticker_33, R.drawable.sticker_34, R.drawable.sticker_35 , R.drawable.sticker_36, R.drawable.sticker_37,
-                R.drawable.sticker_38, R.drawable.sticker_39 , R.drawable.sticker_40, R.drawable.sticker_41,
-                R.drawable.sticker_42, R.drawable.sticker_43, R.drawable.sticker_44 ,R.drawable.sticker_45};
+        int[] stickerThreeList = new int[]{R.drawable.loves_1, R.drawable.loves_2, R.drawable.loves_3, R.drawable.loves_4,
+                R.drawable.loves_5, R.drawable.loves_6, R.drawable.loves_7, R.drawable.loves_8, R.drawable.loves_9,
+                R.drawable.loves_10, R.drawable.loves_11, R.drawable.loves_12, R.drawable.loves_13, R.drawable.loves_14,
+                R.drawable.loves_15, R.drawable.loves_16, R.drawable.loves_17, R.drawable.loves_18, R.drawable.loves_19, R.drawable.loves_20,
+                R.drawable.loves_21, R.drawable.loves_22, R.drawable.loves_23, R.drawable.loves_24, R.drawable.loves_25,
+                R.drawable.loves_26, R.drawable.loves_27};
 
         @NonNull
         @Override

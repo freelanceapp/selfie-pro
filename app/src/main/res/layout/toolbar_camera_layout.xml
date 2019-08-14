@@ -9,7 +9,6 @@
     android:paddingTop="@dimen/dp5"
     android:paddingBottom="@dimen/dp5">
 
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -37,19 +36,15 @@
                 tools:ignore="VectorDrawableCompat" />
         </LinearLayout>
 
-
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_gravity="right|center"
-            android:layout_weight="28"
-            android:orientation="vertical">
-
-        </LinearLayout>
-
+            android:layout_weight="20"
+            android:orientation="vertical"/>
 
         <LinearLayout
-            android:id="@+id/cameraDiscardLayout"
+            android:id="@+id/undoCameraImageLayout"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_gravity="right|center"
@@ -58,23 +53,51 @@
             android:orientation="vertical">
 
             <ImageView
+                android:id="@+id/undoCameraImageView"
                 android:layout_width="match_parent"
-                android:layout_height="30dp"
-                app:srcCompat="@drawable/svg_discard"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_undo"
                 tools:ignore="VectorDrawableCompat"
-                android:background="@drawable/custom_ripple"
                 />
 
             <TextView
+                android:id="@+id/undoCameraTextView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:text="Discard"
+                android:text="Undo"
                 android:textColor="@color/color_icon"
                 android:textStyle="bold" />
         </LinearLayout>
+
         <LinearLayout
-            android:id="@+id/cameraRedoRotationLayout"
+            android:id="@+id/redoCameraImageLayout"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="right|center"
+            android:layout_weight="15"
+            android:background="@drawable/custom_ripple"
+            android:orientation="vertical">
+
+            <ImageView
+                android:id="@+id/redoCameraImageView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_redo"
+                tools:ignore="VectorDrawableCompat" />
+
+            <TextView
+                android:id="@+id/redoCameraTextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="Redo"
+                android:textColor="@color/color_icon"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/discardCameraLayout"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_gravity="right|center"
@@ -82,32 +105,31 @@
             android:background="@drawable/custom_ripple"
             android:orientation="vertical"
             android:visibility="gone">
-
             <ImageView
+                android:id="@+id/discardCameraImage"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:srcCompat="@drawable/ic_redo"
+                android:src="@drawable/svg_discard"
                 tools:ignore="VectorDrawableCompat" />
 
             <TextView
+                android:id="@+id/discardCameraText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
-                android:text="Rt-redo"
+                android:text="Discard"
                 android:textColor="@color/color_icon"
                 android:textStyle="bold" />
-        </LinearLayout>
 
-
+    </LinearLayout>
 
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_gravity="right|center"
-            android:layout_weight="27"
-            android:orientation="vertical">
+            android:layout_weight="20"
+            android:orientation="vertical"/>
 
-        </LinearLayout>
         <LinearLayout
             android:id="@+id/idCameraSaveLayout"
             android:layout_width="0dp"
@@ -135,14 +157,6 @@
                 android:visibility="gone"
                 />
         </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_gravity="right|center"
-            android:layout_weight="5"
-            android:orientation="vertical"/>
-
 
     </LinearLayout>
 </LinearLayout>

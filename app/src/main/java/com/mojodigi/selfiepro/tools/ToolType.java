@@ -8,6 +8,7 @@ public enum ToolType {
     TOOLS,
     EFFECTS,
     BRUSH,
+    BACK,
     TEXT,
     ERASER,
     FILTER,
