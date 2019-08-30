@@ -1,60 +1,161 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:gravity="center_vertical"
+    android:layout_height="match_parent"
+    android:gravity="center"
     android:orientation="vertical"
-    android:paddingLeft="@dimen/dp10"
-    android:paddingRight="@dimen/dp1"
+    android:paddingLeft="@dimen/dp5"
+    android:paddingRight="@dimen/dp5"
     android:background="@color/color_selected"
     >
 
+    <!--android:background="@color/color_selected"-->
+
     <LinearLayout
+        android:id="@+id/brightnessSeekBarLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:paddingBottom="@dimen/dp3"
         android:paddingTop="@dimen/dp3"
+        android:layout_gravity="center"
         android:weightSum="100">
 
         <TextView
+            android:id="@+id/adjustClose"
             android:layout_width="0dp"
-            android:layout_height="@dimen/dp23"
-            android:drawableStart="@drawable/svg_brightness"
-            android:layout_weight="10"/>
+            android:layout_height="@dimen/dp35"
+            android:drawableEnd="@drawable/svg_close"
+            android:layout_weight="10"
+            />
 
-        <SeekBar
-            android:id="@+id/galleryBrightness"
+        <LinearLayout
             android:layout_width="0dp"
-            android:layout_height="@dimen/dp23"
-            android:layout_weight="90" />
+            android:layout_height="@dimen/dp35"
+            android:layout_weight="80"
+            android:orientation="vertical">
+
+            <SeekBar
+                android:id="@+id/galleryBrightnessSeekBar"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="visible"
+                />
+            <SeekBar
+                android:id="@+id/galleryContrastSeekBar"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone"
+                />
+            <SeekBar
+                android:id="@+id/gallerySaturationSeekBar"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone"
+                />
+            <SeekBar
+                android:id="@+id/gallerySharpnessSeekBar"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone"
+                />
+            <SeekBar
+                android:id="@+id/galleryVignetteSeekBar"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone"
+                />
+            <SeekBar
+                android:id="@+id/galleryShadowSeekBar"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone"
+                />
+            <SeekBar
+                android:id="@+id/galleryHighlightSeekBar"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone"
+                />
+            <SeekBar
+                android:id="@+id/galleryTempSeekBar"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone"
+                />
+            <SeekBar
+                android:id="@+id/galleryTintSeekBar"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone"
+                />
+            <SeekBar
+                android:id="@+id/galleryDenoiseSeekBar"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone"
+                />
+            <SeekBar
+                android:id="@+id/galleryCurveSeekBar"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone"
+                />
+            <SeekBar
+                android:id="@+id/galleryColorBalanceSeekBar"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone"
+                />
+        </LinearLayout>
+
+
+        <TextView
+            android:id="@+id/adjustDone"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/dp35"
+            android:drawableStart="@drawable/svg_done"
+            android:layout_weight="10"
+            />
+
     </LinearLayout>
 
 
 
 
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/dp30"
-        android:orientation="horizontal"
-        android:paddingBottom="@dimen/dp3"
-        android:paddingTop="@dimen/dp3"
-        android:weightSum="100">
+    <!-- <LinearLayout
+         android:id="@+id/contrastSeekBarLayout"
+         android:layout_width="match_parent"
+         android:layout_height="@dimen/dp30"
+         android:orientation="horizontal"
+         android:paddingBottom="@dimen/dp3"
+         android:paddingTop="@dimen/dp3"
+         android:weightSum="100"
+         android:visibility="gone">
 
 
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="@dimen/dp22"
-            android:drawableStart="@drawable/svg_contrast"
-            android:layout_weight="10"/>
+         <TextView
+             android:id="@+id/contrastClose"
+             android:layout_width="0dp"
+             android:layout_height="@dimen/dp22"
+             android:drawableStart="@drawable/svg_close"
+             android:layout_weight="10"/>
 
-        <SeekBar
-            android:id="@+id/galleryContrast"
-            android:layout_width="0dp"
-            android:layout_height="@dimen/dp22"
-            android:layout_weight="90" />
-    </LinearLayout>
+         <SeekBar
+             android:id="@+id/galleryContrast"
+             android:layout_width="0dp"
+             android:layout_height="@dimen/dp22"
+             android:layout_weight="80" />
 
+         <TextView
+             android:id="@+id/contrastDone"
+             android:layout_width="0dp"
+             android:layout_height="@dimen/dp23"
+             android:drawableStart="@drawable/svg_done"
+             android:layout_weight="10"/>
+
+     </LinearLayout>
+ -->
 
 </LinearLayout>

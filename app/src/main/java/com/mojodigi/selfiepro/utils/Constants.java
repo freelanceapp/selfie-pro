@@ -35,6 +35,16 @@ public class Constants {
     public static Bitmap capturedImageBitmap5 = null;
     public static Bitmap capturedImageBitmap6 = null;
 
+    public static Bitmap galleryOrignalBitmap = null;
+    public static Bitmap cameraOrignalBitmap = null;
+    public static Bitmap collageOrignalBitmap1 = null;
+    public static Bitmap collageOrignalBitmap2 = null;
+    public static Bitmap collageOrignalBitmap3 = null;
+    public static Bitmap collageOrignalBitmap4 = null;
+    public static Bitmap collageOrignalBitmap5 = null;
+    public static Bitmap collageOrignalBitmap6 = null;
+
+
     public static String cameraImageUri = "";
     public static String galleryImageUri = "";
 
@@ -63,7 +73,7 @@ public class Constants {
 
     public static final String appfolder = Environment.getExternalStorageDirectory().getAbsolutePath()+"/SelfiePro";
 
-    public static final String  tempfolder  = Environment.getExternalStorageDirectory().getAbsolutePath()+"/SelfiePro_Temp";
+    public static final String  tempfolder  = Environment.getExternalStorageDirectory().getAbsolutePath()+"/temp";
 
     public static final String  BITMAP_PICK_CAMERA  = "BITMAP_PICK_CAMERA";
     public static final String  BITMAP_PICK_GALLERY  = "BITMAP_PICK_GALLERY";
@@ -89,5 +99,9 @@ public class Constants {
 
 
     public static boolean isSetCollageLayout1 =  false ;
+
+    public static boolean isAdjustSelected =  false ;
+
+
 
 }

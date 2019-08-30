@@ -80,11 +80,12 @@ public class StickerFourFragment extends BottomSheetDialogFragment {
 
     public class StickerAdapter extends RecyclerView.Adapter<StickerFourFragment.StickerAdapter.ViewHolder> {
 
-        int[] stickerFourList = new int[]{R.drawable.couple_1, R.drawable.couple_2, R.drawable.couple_3, R.drawable.couple_4,
+       int[] stickerFourList = new int[]{R.drawable.couple_1, R.drawable.couple_2, R.drawable.couple_3, R.drawable.couple_4,
                 R.drawable.couple_5, R.drawable.couple_6, R.drawable.couple_7, R.drawable.couple_8,
                 R.drawable.couple_9, R.drawable.couple_10 , R.drawable.couple_11, R.drawable.couple_12,
                 R.drawable.couple_13, R.drawable.couple_14 , R.drawable.couple_15, R.drawable.couple_16,
                 R.drawable.couple_17, R.drawable.couple_18, R.drawable.couple_19};
+
 
         @NonNull
         @Override

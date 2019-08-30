@@ -52,14 +52,11 @@
         </RelativeLayout>
     </LinearLayout>
 
-
-
-
     <LinearLayout
         android:id="@+id/idCameraImageLLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@+id/blankCameraLayoutBottom"
+        android:layout_above="@+id/cameraBlankLayoutBottom"
         android:layout_below="@+id/blankCameraLayoutTop"
         android:background="@color/white"
         android:orientation="vertical"
@@ -78,7 +75,6 @@
             android:visibility="visible"
             >
 
-
             <com.github.chrisbanes.photoview.PhotoView
                 android:id="@+id/cameraSelectedImageShape"
                 android:layout_width="match_parent"
@@ -91,35 +87,6 @@
                 />
 
         </RelativeLayout>
-
-        <RelativeLayout
-            android:id="@+id/adjustCameraRLayout"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:gravity="center"
-            android:background="@color/white"
-            android:visibility="gone">
-            <RelativeLayout
-                android:id="@+id/adjustCameraPhotoRLayout"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:background="@color/white"
-                android:visibility="visible"
-                >
-                <com.github.chrisbanes.photoview.PhotoView
-                    android:id="@+id/adjustCameraPhotoView"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:scaleType="fitXY"
-                    android:gravity="center"
-                    android:layout_gravity="center"
-                    android:src="@drawable/collage_4_4"
-                    android:background="@color/white"
-                    />
-            </RelativeLayout>
-        </RelativeLayout>
-
     </LinearLayout>
 
 
@@ -128,15 +95,16 @@
 
 
 
-
     <LinearLayout
-        android:id="@+id/blankCameraLayoutBottom"
+        android:id="@+id/cameraBlankLayoutBottom"
         android:layout_width="match_parent"
         android:layout_height="@dimen/dp55"
         android:layout_above="@+id/cameraSubToolsLayout"
         android:background="@color/white"
         android:orientation="vertical"
         android:visibility="visible"/>
+
+
 
 
     <LinearLayout
@@ -156,6 +124,7 @@
             android:paddingRight="@dimen/dp4"
             android:visibility="gone"
             android:background="@color/color_selected" >
+
             <com.mojodigi.selfiepro.filters.NonSwipeableViewPager
                 android:id="@+id/filters_viewpager"
                 android:layout_width="match_parent"
@@ -163,6 +132,8 @@
                 android:background="@color/color_selected"
                 app:layout_behavior="@string/appbar_scrolling_view_behavior" />
         </LinearLayout>
+
+
 
         <android.support.v7.widget.RecyclerView
             android:id="@+id/cameraSubToolsRecycler"
@@ -196,21 +167,39 @@
 
 
 
-
     <LinearLayout
         android:id="@+id/cameraBootomLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true">
+        android:layout_alignParentBottom="true"
+        android:orientation="vertical"
+        android:background="@color/color_theme">
 
-        <include
-            layout="@layout/camera_edittools_layout"
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/cameraAdjustToolsRecycler"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingLeft="@dimen/dp1"
-            android:paddingTop="@dimen/dp10"
-            android:paddingRight="@dimen/dp1"
-            android:paddingBottom="@dimen/dp10" />
+            android:background="@color/color_theme"
+            android:orientation="horizontal"
+            app:layoutManager="android.support.v7.widget.LinearLayoutManager"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:visibility="gone"
+            />
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/cameraEditToolsRecycleView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/color_theme"
+            android:orientation="horizontal"
+            app:layoutManager="android.support.v7.widget.LinearLayoutManager"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:visibility="visible"
+            />
+
     </LinearLayout>
 
 

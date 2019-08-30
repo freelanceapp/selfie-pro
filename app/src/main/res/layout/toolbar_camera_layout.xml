@@ -17,7 +17,7 @@
 
         <LinearLayout
             android:layout_weight="15"
-            android:id="@+id/idCameraEditBackLLayout"
+            android:id="@+id/backCameraLLayout"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_gravity="left|center"

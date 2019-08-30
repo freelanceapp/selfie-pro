@@ -98,7 +98,7 @@ public class HomeActivity extends PermissionsActivity implements View.OnClickLis
         if(mContext!=null)
         {
             addprefs = new SharedPreferenceUtil(mContext);
-            addhoster=findViewById(R.id.addhoster);
+            addhoster= (RelativeLayout)findViewById(R.id.addhoster);
             adContainer = findViewById(R.id.adMobView);
 
         }
@@ -250,7 +250,7 @@ public class HomeActivity extends PermissionsActivity implements View.OnClickLis
 
                             String newVersion=JsonParser.getkeyValue_Str(mainJson,"appVersion");
                             addprefs.setValue(AddConstants.APP_VERSION, newVersion);
-                            //addprefs.setValue(AddConstants.APP_VERSION, "1.29");
+                            //addprefs.setValue(AddConstants.APP_VERSION, "1.1");
 
 
                             if (status.equalsIgnoreCase("true")) {
@@ -267,15 +267,15 @@ public class HomeActivity extends PermissionsActivity implements View.OnClickLis
                                         String adProviderName = JsonParser.getkeyValue_Str(dataJson, "adProviderName");
 
 
-//                                        String appId_PublisherId = JsonParser.getkeyValue_Str(dataJson, "appId_PublisherId");
-//                                        String bannerAdId = JsonParser.getkeyValue_Str(dataJson, "bannerAdId");
-//                                        String interstitialAdId = JsonParser.getkeyValue_Str(dataJson, "interstitialAdId");
-//                                        String videoAdId = JsonParser.getkeyValue_Str(dataJson, "videoAdId");
+                                        String appId_PublisherId = JsonParser.getkeyValue_Str(dataJson, "appId_PublisherId");
+                                        String bannerAdId = JsonParser.getkeyValue_Str(dataJson, "bannerAdId");
+                                        String interstitialAdId = JsonParser.getkeyValue_Str(dataJson, "interstitialAdId");
+                                        String videoAdId = JsonParser.getkeyValue_Str(dataJson, "videoAdId");
 
-                                        String appId_PublisherId = "0";//testID
-                                        String bannerAdId = "712543632524943_712544799191493"; //testId
-                                        String interstitialAdId = "712543632524943_712548422524464";//testId
-                                        String videoAdId = "0";//testId
+//                                        String appId_PublisherId = "0";//testID
+//                                        String bannerAdId = "712543632524943_712544799191493"; //testId
+//                                        String interstitialAdId = "712543632524943_712548422524464";//testId
+//                                        String videoAdId = "0";//testId
 
 
                                         Log.d("AddiDs", adProviderName + " ==" + appId_PublisherId + "==" + bannerAdId + "==" + interstitialAdId + "==" + videoAdId);
@@ -318,7 +318,7 @@ public class HomeActivity extends PermissionsActivity implements View.OnClickLis
                                 }
                             }
                             //call dispUpdateDialog
-                            //dispUpdateDialog();
+                            dispUpdateDialog();
                         }
                     } catch (JSONException e) {
                         Log.d("jsonParse", "error while parsing json -->" + e.getMessage());
@@ -435,7 +435,9 @@ public class HomeActivity extends PermissionsActivity implements View.OnClickLis
                     try {
                         Uri uri = data.getData();
                         Constants.imageUri = uri;
-                        Intent intentPhotoGallary  = new Intent(HomeActivity.this,  GalleryActivity.class);
+                         Intent intentPhotoGallary  = new Intent(HomeActivity.this,  GalleryActivity.class);
+                        //  Intent intentPhotoGallary  = new Intent(HomeActivity.this,  AdjustActivity.class);
+                        //Intent intentPhotoGallary  = new Intent(HomeActivity.this,  AdjustDemoActivity.class);
                         intentPhotoGallary.putExtra(Constants.URI_GALLERY,  Constants.imageUri);
                         intentPhotoGallary.putExtra(Constants.PATH_CAMERA,  uri.getPath());
                         startActivity(intentPhotoGallary);

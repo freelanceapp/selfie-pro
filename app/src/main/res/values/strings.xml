@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Selfie Pro</string>
+    <string name="app_name">SelfiePro</string>
 
     <string name="label_crop">Crop</string>
     <string name="label_brush">Brush</string>

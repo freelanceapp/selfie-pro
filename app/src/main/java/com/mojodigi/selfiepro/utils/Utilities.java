@@ -267,12 +267,6 @@ public class Utilities {
 
 
 
-
-
-
-
-
-
 //    private String saveImage() {
 //
 //        OutputStream output;

@@ -80,7 +80,9 @@ public class StickerEightFragment extends BottomSheetDialogFragment {
 
     public class StickerAdapter extends RecyclerView.Adapter<StickerEightFragment.StickerAdapter.ViewHolder> {
 
-        int[] stickerEightList = new int[]{ R.drawable.love_1};
+        int[] stickerEightList = new int[]{ R.drawable.shades_1, R.drawable.shades_2 ,
+                R.drawable.shades_3, R.drawable.shades_4 , R.drawable.shades_5, R.drawable.shades_6 ,
+                R.drawable.shades_7, R.drawable.shades_8};
 
         @NonNull
         @Override

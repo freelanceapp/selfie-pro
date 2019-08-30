@@ -10,6 +10,7 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.drawable.BitmapDrawable;
@@ -19,6 +20,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.provider.MediaStore;
 import android.provider.OpenableColumns;
 import android.support.v4.content.ContextCompat;
@@ -47,15 +49,27 @@ import com.mojodigi.selfiepro.AddsUtility.AddMobUtils;
 import com.mojodigi.selfiepro.AddsUtility.SharedPreferenceUtil;
 import com.mojodigi.selfiepro.R;
 import com.mojodigi.selfiepro.activity.EditImageActivity;
+import com.mojodigi.selfiepro.adjust.AdjustToolsAdapter;
+import com.mojodigi.selfiepro.adjust.AdjustToolsType;
+import com.mojodigi.selfiepro.adjust.OnAdjustTollsSelected;
+import com.mojodigi.selfiepro.filters.EditImageListener;
 import com.mojodigi.selfiepro.filters.FiltersListFragment;
 import com.mojodigi.selfiepro.filters.FiltersPagerAdapter;
-import com.mojodigi.selfiepro.utils.ColorFilterGenerator;
 import com.mojodigi.selfiepro.utils.Constants;
 import com.mojodigi.selfiepro.utils.CustomProgressDialog;
 import com.mojodigi.selfiepro.utils.MyPreference;
 import com.mojodigi.selfiepro.utils.Utilities;
 import com.yalantis.ucrop.UCrop;
+import com.zomato.photofilters.geometry.Point;
 import com.zomato.photofilters.imageprocessors.Filter;
+import com.zomato.photofilters.imageprocessors.subfilters.BrightnessSubFilter;
+import com.zomato.photofilters.imageprocessors.subfilters.ColorOverlaySubFilter;
+import com.zomato.photofilters.imageprocessors.subfilters.ContrastSubFilter;
+import com.zomato.photofilters.imageprocessors.subfilters.SaturationSubfilter;
+import com.zomato.photofilters.imageprocessors.subfilters.ToneCurveSubFilter;
+import com.zomato.photofilters.imageprocessors.subfilters.VignetteSubfilter;
+
+import net.alhazmy13.imagefilter.ImageFilter;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -66,38 +80,49 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Random;
 
 
-public class CameraActivity  extends AppCompatActivity implements FiltersListFragment.FiltersListFragmentListener, /*View.OnTouchListener,*/
+public class CameraActivity  extends AppCompatActivity implements OnAdjustTollsSelected,EditImageListener,FiltersListFragment.FiltersListFragmentListener,
+
         View.OnClickListener,  OnCameraEditTollsSelected, SeekBar.OnSeekBarChangeListener , OnCameraSubTollsSelected
 {
 
-    private Context mContext = null ;
     private static final String TAG = CameraActivity.class.getSimpleName();
+    private Context mContext = null ;
+
     private static final int REQUEST_TYPE_CAMERA = 101;
 
-    static { System.loadLibrary("NativeImageProcessor"); }
 
-    private ImageView    undoCameraImageView , redoCameraImageView;
 
-    private PhotoView cameraSelectedImageShape , adjustCameraPhotoView;
+    private ImageView  undoCameraImageView , redoCameraImageView;
+
+    private PhotoView cameraSelectedImageShape /*, adjustCameraPhotoView*/;
 
     private TextView   undoCameraTextView , redoCameraTextView;
 
-    private RelativeLayout cameraSelectedImageRLayout  , adjustCameraRLayout , adjustCameraPhotoRLayout ;
-    private LinearLayout mCameraEditBackLLayout, undoCameraImageLayout , redoCameraImageLayout , discardCameraLayout, mCameraSaveLayout , cameraAdjustSeekbarLLayout , cameraSubToolsLayout ;
+    private RelativeLayout cameraSelectedImageRLayout      ;
+    private LinearLayout backCameraLLayout, undoCameraImageLayout , redoCameraImageLayout , discardCameraLayout,
+            mCameraSaveLayout , cameraAdjustSeekbarLLayout , cameraSubToolsLayout ;
+
     private MyPreference mMyPrecfence = null;
 
 
 
-    private RecyclerView cameraEditToolsRecycleView ;
+    private RecyclerView cameraSubToolsRecycler , cameraEditToolsRecycleView  , cameraAdjustToolsRecycler ;
+
     private CameraEditToolsAdapter mCameraEditToolsAdapter;
     private CameraSubToolsAdapter cameraSubToolsAdapter;
+    private AdjustToolsAdapter adjustToolsAdapter;
 
-    private SeekBar cameraBrightness , cameraContrast ;
+    private SeekBar cameraBrightnessSeekBar, cameraContrastSeekBar , cameraSaturationSeekBar ,cameraSharpnessSeekBar
+            , cameraVignetteSeekBar , cameraShadowSeekBar , cameraHighlightSeekBar
+            , cameraTempSeekBar , cameraTintSeekBar ,  cameraDenoiseSeekBar , cameraCurveSeekBar, cameraColorBalanceSeekBar;
+
 
     public static CameraActivity instance;
-    private RecyclerView  cameraSubToolsRecycler;
+    static { System.loadLibrary("NativeImageProcessor"); }
+
 
 
 
@@ -106,14 +131,14 @@ public class CameraActivity  extends AppCompatActivity implements FiltersListFra
 
     private float angleRotation = 0;
 
-    private LinearLayout  mCameraImageLLayout , cameraEffectsLLayout ,blankCameraLayoutTop, blankCameraLayoutBottom ;
+    private LinearLayout  mCameraImageLLayout , cameraEffectsLLayout ,blankCameraLayoutTop, cameraBlankLayoutBottom ;
 
     private int currentShowingIndex = 0;
     private Uri  mainPathUri  ;
 
     private ArrayList<Uri> pathForTempList  ;
 
-    private int progressBright , progressContrast;
+   //  private int progressBright , progressContrast;
 
     private Bitmap originalImage , firstImage , initialBitmap;
     private Bitmap filteredImage;
@@ -124,25 +149,62 @@ public class CameraActivity  extends AppCompatActivity implements FiltersListFra
     private SharedPreferenceUtil addprefs;
     private View adContainer;
 
+
+
+    Bitmap finalImage;
+    // modified image values
+    int brightnessFinal = 0;
+    float saturationFinal = 1.0f;
+    float contrastFinal = 1.0f;
+
+
+    private TextView adjustClose  ,  adjustDone;
+    private LinearLayoutManager mAdjustToolsAdapterLManager;
+
+    public static final double PI = 3.14159d;
+    public static final double FULL_CIRCLE_DEGREE = 360d;
+    public static final double HALF_CIRCLE_DEGREE = 180d;
+    public static final double RANGE = 256d;
+
+    final static int KERNAL_WIDTH = 3;
+    final static int KERNAL_HEIGHT = 3;
+
+    int[][] SharpConfig ={
+            {0, -1, 0},
+            {-1, 5, -1},
+            {0, -1, 0}
+    };
+    double[][] SharpConfig2 = new double[][] {
+            { 0 , -2    , 0  },
+            { -2, 11, -2 },
+            { 0 , -2    , 0  }
+    };
+
+
     @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_camera);
-
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
+        if (instance == null) {
+            instance = CameraActivity.this;
+        }
+        if (mContext == null) {
+            mContext = CameraActivity.this;
+        }
+
+
 
         Constants.isAdjustCameraImage =false;
         Constants.isImageCroped =false;
         Constants.editImageUri = "false";
+        Constants.isAdjustSelected = false;
 
-        instance = this;
 
-        if (mContext == null) {
-            mContext = CameraActivity.this;
-        }
+
         if (mMyPrecfence == null) {
             mMyPrecfence = MyPreference.getMyPreferenceInstance(mContext);
         }
@@ -159,6 +221,7 @@ public class CameraActivity  extends AppCompatActivity implements FiltersListFra
 
         filters_viewpager = (ViewPager)findViewById(R.id.filters_viewpager);;
         setupViewPager(filters_viewpager);
+
         loadImageFilters();
 
 
@@ -217,14 +280,16 @@ public class CameraActivity  extends AppCompatActivity implements FiltersListFra
         super.onResume();
 
 
-        adjustCameraRLayout.setVisibility(View.GONE);
         cameraSelectedImageRLayout.setVisibility(View.VISIBLE);
+        cameraEditToolsRecycleView.setVisibility(View.VISIBLE);
 
-        blankCameraLayoutBottom.setVisibility(View.VISIBLE);
+        cameraBlankLayoutBottom.setVisibility(View.VISIBLE);
         cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
-        cameraEffectsLLayout.setVisibility(View.GONE);
         cameraSubToolsLayout.setVisibility(View.GONE);
         cameraSubToolsRecycler.setVisibility(View.GONE);
+        cameraAdjustToolsRecycler.setVisibility(View.GONE);
+        cameraEffectsLLayout.setVisibility(View.GONE);
+
 
         cameraSelectedImageShape.setLayoutParams(
                 new android.widget.RelativeLayout.LayoutParams(
@@ -248,7 +313,7 @@ public class CameraActivity  extends AppCompatActivity implements FiltersListFra
                         ) );
 
                 cameraSelectedImageShape.setScaleType(ImageView.ScaleType.FIT_CENTER);
-
+                //Constants.cameraOrignalBitmap = originalImage;
                 cameraSelectedImageShape.setImageBitmap(originalImage);
 
                 cameraSelectedImageShape.setRotation(0);
@@ -270,6 +335,7 @@ public class CameraActivity  extends AppCompatActivity implements FiltersListFra
         }
         Constants.editImageUri = "false";
         Constants.isAdjustCameraImage =false;
+        Constants.isAdjustSelected = false;
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -278,14 +344,6 @@ public class CameraActivity  extends AppCompatActivity implements FiltersListFra
         cameraSelectedImageRLayout = (RelativeLayout) findViewById(R.id.cameraSelectedImageRLayout);
         cameraSelectedImageRLayout.setVisibility(View.VISIBLE);
 
-
-        adjustCameraRLayout = (RelativeLayout) findViewById(R.id.adjustCameraRLayout);
-        adjustCameraRLayout.setVisibility(View.GONE);
-        adjustCameraPhotoRLayout = (RelativeLayout) findViewById(R.id.adjustCameraPhotoRLayout);
-        adjustCameraPhotoView = (PhotoView) findViewById(R.id.adjustCameraPhotoView);
-        adjustCameraPhotoView.setRotation(0);
-        fixAntiAlias(adjustCameraPhotoView);
-
         cameraSelectedImageShape = (PhotoView) findViewById(R.id.cameraSelectedImageShape);
         cameraSelectedImageShape.setLayoutParams(
                 new android.widget.RelativeLayout.LayoutParams(
@@ -293,13 +351,15 @@ public class CameraActivity  extends AppCompatActivity implements FiltersListFra
                         ViewGroup.LayoutParams.MATCH_PARENT
                 ) );
         cameraSelectedImageShape.setScaleType(ImageView.ScaleType.FIT_CENTER);
-
+        Constants.cameraOrignalBitmap = Constants.capturedImageBitmap;
         cameraSelectedImageShape.setImageBitmap(Constants.capturedImageBitmap);
         //cameraSelectedImageShape.setColorFilter(Utilities.setBrightness(110));
         cameraSelectedImageShape.setOnClickListener(this);
         cameraSelectedImageShape.setRotation(0);
         fixAntiAlias(cameraSelectedImageShape);
 
+        backCameraLLayout = (LinearLayout) findViewById(R.id.backCameraLLayout);
+        backCameraLLayout.setOnClickListener(this);
 
         mCameraImageLLayout = (LinearLayout) findViewById(R.id.idCameraImageLLayout);
         cameraEffectsLLayout = (LinearLayout) findViewById(R.id.cameraEffectsLLayout);
@@ -307,41 +367,36 @@ public class CameraActivity  extends AppCompatActivity implements FiltersListFra
         blankCameraLayoutTop = (LinearLayout) findViewById(R.id.blankCameraLayoutTop);
         blankCameraLayoutTop.setVisibility(View.VISIBLE);
         blankCameraLayoutTop.setOnClickListener(this);
-        blankCameraLayoutBottom = (LinearLayout) findViewById(R.id.blankCameraLayoutBottom);
-        blankCameraLayoutBottom.setVisibility(View.VISIBLE);
-        blankCameraLayoutBottom.setOnClickListener(this);
+        cameraBlankLayoutBottom = (LinearLayout) findViewById(R.id.cameraBlankLayoutBottom);
+        cameraBlankLayoutBottom.setVisibility(View.VISIBLE);
+        cameraBlankLayoutBottom.setOnClickListener(this);
 
         mCameraEditToolsAdapter = new CameraEditToolsAdapter(this);
         cameraSubToolsAdapter = new CameraSubToolsAdapter(this);
 
-        mCameraEditBackLLayout = (LinearLayout) findViewById(R.id.idCameraEditBackLLayout);
+
 
         undoCameraImageLayout = (LinearLayout) findViewById(R.id.undoCameraImageLayout);
+        undoCameraImageLayout.setOnClickListener(this);
         undoCameraImageView = (ImageView) findViewById(R.id.undoCameraImageView);
         undoCameraTextView = (TextView) findViewById(R.id.undoCameraTextView);
 
         redoCameraImageLayout = (LinearLayout) findViewById(R.id.redoCameraImageLayout);
+        redoCameraImageLayout.setOnClickListener(this);
+
         redoCameraImageView = (ImageView) findViewById(R.id.redoCameraImageView);
         redoCameraTextView = (TextView) findViewById(R.id.redoCameraTextView);
 
         discardCameraLayout = (LinearLayout) findViewById(R.id.discardCameraLayout);
-
+        discardCameraLayout.setOnClickListener(this);
         mCameraSaveLayout = (LinearLayout) findViewById(R.id.idCameraSaveLayout);
+        mCameraSaveLayout.setOnClickListener(this);
+
         cameraSubToolsLayout = (LinearLayout) findViewById(R.id.cameraSubToolsLayout);
+        cameraSubToolsLayout.setVisibility(View.GONE);
 
         cameraAdjustSeekbarLLayout = (LinearLayout) findViewById(R.id.cameraAdjustSeekbarLLayout);
         cameraAdjustSeekbarLLayout.setOnClickListener(this);
-        mCameraEditBackLLayout.setOnClickListener(this);
-        mCameraSaveLayout.setOnClickListener(this);
-        undoCameraImageLayout.setOnClickListener(this);
-        redoCameraImageLayout.setOnClickListener(this);
-        discardCameraLayout.setOnClickListener(this);
-
-        cameraBrightness = (SeekBar)findViewById(R.id.cameraBrightness);
-        cameraBrightness.setOnSeekBarChangeListener(this);
-
-        cameraContrast = (SeekBar)findViewById(R.id.cameraContrast);
-        cameraContrast.setOnSeekBarChangeListener(this);
 
         cameraEditToolsRecycleView = (RecyclerView) findViewById(R.id.cameraEditToolsRecycleView);
         cameraEditToolsRecycleView.setVisibility(View.VISIBLE);
@@ -356,13 +411,571 @@ public class CameraActivity  extends AppCompatActivity implements FiltersListFra
         cameraSubToolsRecycler.setLayoutManager(mcameraSubToolsAdapterLManager);
         cameraSubToolsRecycler.setAdapter(cameraSubToolsAdapter);
 
+        cameraAdjustToolsRecycler = (RecyclerView) findViewById(R.id.cameraAdjustToolsRecycler);
+        cameraAdjustToolsRecycler.setVisibility(View.GONE);
+        adjustToolsAdapter = new AdjustToolsAdapter(this);
+        mAdjustToolsAdapterLManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
+        cameraAdjustToolsRecycler.setLayoutManager(mAdjustToolsAdapterLManager);
+        cameraAdjustToolsRecycler.setAdapter(adjustToolsAdapter);
+
         addToUndoReodList();
         hideShowUndoRedo();
+
+
+        cameraBrightnessSeekBar = (SeekBar) findViewById(R.id.cameraBrightnessSeekBar);
+        cameraBrightnessSeekBar.setVisibility(View.VISIBLE);
+        cameraBrightnessSeekBar.setOnSeekBarChangeListener(this);
+
+        cameraContrastSeekBar = (SeekBar) findViewById(R.id.cameraContrastSeekBar);
+        cameraContrastSeekBar.setOnSeekBarChangeListener(this);
+
+        cameraSaturationSeekBar = (SeekBar) findViewById(R.id.cameraSaturationSeekBar);
+        cameraSaturationSeekBar.setOnSeekBarChangeListener(this);
+
+        cameraSharpnessSeekBar = (SeekBar) findViewById(R.id.cameraSharpnessSeekBar);
+        cameraSharpnessSeekBar.setOnSeekBarChangeListener(this);
+
+        cameraVignetteSeekBar = (SeekBar) findViewById(R.id.cameraVignetteSeekBar);
+        cameraVignetteSeekBar.setOnSeekBarChangeListener(this);
+
+        cameraShadowSeekBar = (SeekBar) findViewById(R.id.cameraShadowSeekBar);
+        cameraShadowSeekBar.setOnSeekBarChangeListener(this);
+
+        cameraHighlightSeekBar = (SeekBar) findViewById(R.id.cameraHighlightSeekBar);
+        cameraHighlightSeekBar.setOnSeekBarChangeListener(this);
+
+        cameraTempSeekBar = (SeekBar) findViewById(R.id.cameraTempSeekBar);
+        cameraTempSeekBar.setOnSeekBarChangeListener(this);
+
+        cameraTintSeekBar = (SeekBar) findViewById(R.id.cameraTintSeekBar);
+        cameraTintSeekBar.setOnSeekBarChangeListener(this);
+
+        cameraDenoiseSeekBar = (SeekBar) findViewById(R.id.cameraDenoiseSeekBar);
+        cameraDenoiseSeekBar.setOnSeekBarChangeListener(this);
+
+        cameraCurveSeekBar = (SeekBar) findViewById(R.id.cameraCurveSeekBar);
+        cameraCurveSeekBar.setOnSeekBarChangeListener(this);
+
+        cameraColorBalanceSeekBar = (SeekBar) findViewById(R.id.cameraColorBalanceSeekBar);
+        cameraColorBalanceSeekBar.setOnSeekBarChangeListener(this);
+
+
+        adjustClose = (TextView) findViewById(R.id.adjustClose);
+        adjustClose.setOnClickListener(this);
+
+        adjustDone = (TextView) findViewById(R.id.adjustDone);
+        adjustDone.setOnClickListener(this);
 
     }
 
 
+    /**onClick*/
+    @Override
+    public void onClick(View view) {
+        switch (view.getId()) {
+            case R.id.backCameraLLayout:
+                Constants.isAdjustSelected = false;
+                Constants.isAdjustCameraImage = false;
 
+                if(Constants.isAdjustCameraImage){
+                    cameraSelectedImageShape.setImageBitmap(Constants.capturedImageBitmap);
+
+                    cameraSelectedImageRLayout.setVisibility(View.VISIBLE);
+                    cameraEditToolsRecycleView.setVisibility(View.VISIBLE);
+                    cameraBlankLayoutBottom.setVisibility(View.VISIBLE);
+
+                    cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
+                    cameraSubToolsLayout.setVisibility(View.GONE);
+                    cameraSubToolsRecycler.setVisibility(View.GONE);
+                    cameraAdjustToolsRecycler.setVisibility(View.GONE);
+                    cameraEffectsLLayout.setVisibility(View.GONE);
+
+                    addToUndoReodList();
+                    Constants.isAdjustCameraImage=false;
+                }
+
+                cameraSelectedImageRLayout.setVisibility(View.VISIBLE);
+                cameraEditToolsRecycleView.setVisibility(View.VISIBLE);
+                cameraBlankLayoutBottom.setVisibility(View.VISIBLE);
+
+                cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
+                cameraSubToolsLayout.setVisibility(View.GONE);
+                cameraSubToolsRecycler.setVisibility(View.GONE);
+                cameraAdjustToolsRecycler.setVisibility(View.GONE);
+                cameraEffectsLLayout.setVisibility(View.GONE);
+
+                show_alert_back("Exit", "Are you sure you want to exit Editor ?");
+                break;
+
+
+            case R.id.undoCameraImageLayout:
+                Constants.isAdjustCameraImage = false;
+                Constants.isAdjustSelected = false;
+
+                cameraSelectedImageRLayout.setVisibility(View.VISIBLE);
+                cameraEditToolsRecycleView.setVisibility(View.VISIBLE);
+                cameraBlankLayoutBottom.setVisibility(View.VISIBLE);
+
+                cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
+                cameraAdjustToolsRecycler.setVisibility(View.GONE);
+                cameraSubToolsLayout.setVisibility(View.GONE);
+                cameraSubToolsRecycler.setVisibility(View.GONE);
+                cameraEffectsLLayout.setVisibility(View.GONE);
+
+                Log.e("Undo List Size", pathForTempList.size()+"");
+                Log.e("Undo Index " ,  currentShowingIndex+"");
+
+                if(currentShowingIndex>pathForTempList.size()){
+                    currentShowingIndex = currentShowingIndex-1;
+                    return;
+                }
+
+                hideShowUndoRedo();
+                if(currentShowingIndex >=1) {
+                    onUndoPressed( );
+                }else {Log.e("" ,"");}
+
+                break;
+
+
+
+            case R.id.redoCameraImageLayout:
+                Constants.isAdjustCameraImage = false;
+                Constants.isAdjustSelected = false;
+
+
+                cameraSelectedImageRLayout.setVisibility(View.VISIBLE);
+                cameraEditToolsRecycleView.setVisibility(View.VISIBLE);
+                cameraBlankLayoutBottom.setVisibility(View.VISIBLE);
+
+                cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
+                cameraSubToolsLayout.setVisibility(View.GONE);
+                cameraSubToolsRecycler.setVisibility(View.GONE);
+                cameraAdjustToolsRecycler.setVisibility(View.GONE);
+                cameraEffectsLLayout.setVisibility(View.GONE);
+
+
+                Log.e("Redo List Size", pathForTempList.size()+"");
+                Log.e("Redo Index " ,  currentShowingIndex+"");
+                if(currentShowingIndex>pathForTempList.size()){
+                    currentShowingIndex = currentShowingIndex-1;
+                    return;
+                }
+                hideShowUndoRedo();
+                if(currentShowingIndex < pathForTempList.size()-1) {
+                    onRedoPressed();
+                }else {Log.e("" ,"");}
+
+                break;
+
+            case R.id.idCameraSaveLayout:
+                Constants.isAdjustCameraImage = false;
+                Constants.isAdjustSelected = false;
+
+                if(Constants.isAdjustCameraImage){
+
+                    cameraSelectedImageShape.setImageBitmap(Constants.capturedImageBitmap);
+
+                    cameraSelectedImageRLayout.setVisibility(View.VISIBLE);
+                    cameraEditToolsRecycleView.setVisibility(View.VISIBLE);
+                    cameraBlankLayoutBottom.setVisibility(View.VISIBLE);
+                    cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
+                    cameraSubToolsLayout.setVisibility(View.GONE);
+                    cameraSubToolsRecycler.setVisibility(View.GONE);
+                    cameraAdjustToolsRecycler.setVisibility(View.GONE);
+                    cameraEffectsLLayout.setVisibility(View.GONE);
+
+                    addToUndoReodList();
+                    Constants.isAdjustCameraImage=false;
+                }
+
+                cameraSelectedImageRLayout.setVisibility(View.VISIBLE);
+                cameraEditToolsRecycleView.setVisibility(View.VISIBLE);
+                cameraBlankLayoutBottom.setVisibility(View.VISIBLE);
+                cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
+                cameraSubToolsLayout.setVisibility(View.GONE);
+                cameraSubToolsRecycler.setVisibility(View.GONE);
+                cameraAdjustToolsRecycler.setVisibility(View.GONE);
+                cameraEffectsLLayout.setVisibility(View.GONE);
+
+                cameraSelectedImageShape.setLayoutParams(
+                        new android.widget.RelativeLayout.LayoutParams(
+                                ViewGroup.LayoutParams.WRAP_CONTENT,
+                                ViewGroup.LayoutParams.WRAP_CONTENT
+                        ) );
+                cameraSelectedImageShape.setScaleType(ImageView.ScaleType.FIT_CENTER);
+
+                if(cameraSelectedImageShape.getRotation()>0){
+                    Bitmap bitmap = createBitmapFromLayout(cameraSelectedImageRLayout);
+                    Utilities.saveSelfieProImage(mContext , bitmap);
+                }else if(cameraSelectedImageShape.getRotation()==0) {
+                   Bitmap bitmap = ((BitmapDrawable) cameraSelectedImageShape.getDrawable()).getBitmap();
+                   Utilities.saveSelfieProImage(mContext , bitmap);
+                }
+
+                cameraSelectedImageShape.setLayoutParams(
+                        new android.widget.RelativeLayout.LayoutParams(
+                                ViewGroup.LayoutParams.MATCH_PARENT,
+                                ViewGroup.LayoutParams.MATCH_PARENT
+                        ) );
+                cameraSelectedImageShape.setScaleType(ImageView.ScaleType.FIT_CENTER);
+
+/*****************************Display Interestial Adds****************************/
+                if(addprefs!=null)
+                    dispInterestialAdds();
+
+                break;
+
+            case R.id.blankCameraLayoutTop:
+                if(Constants.isAdjustCameraImage){
+                    cameraSelectedImageShape.setImageBitmap(Constants.capturedImageBitmap);
+
+                    cameraSelectedImageRLayout.setVisibility(View.VISIBLE);
+                    cameraEditToolsRecycleView.setVisibility(View.VISIBLE);
+                    cameraBlankLayoutBottom.setVisibility(View.VISIBLE);
+                    blankCameraLayoutTop.setVisibility(View.VISIBLE);
+
+                    cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
+                    cameraSubToolsLayout.setVisibility(View.GONE);
+                    cameraSubToolsRecycler.setVisibility(View.GONE);
+                    cameraAdjustToolsRecycler.setVisibility(View.GONE);
+                    cameraEffectsLLayout.setVisibility(View.GONE);
+
+                    addToUndoReodList();
+                    Constants.isAdjustCameraImage=false;
+                }
+
+                cameraSelectedImageRLayout.setVisibility(View.VISIBLE);
+                cameraEditToolsRecycleView.setVisibility(View.VISIBLE);
+                cameraBlankLayoutBottom.setVisibility(View.VISIBLE);
+                blankCameraLayoutTop.setVisibility(View.VISIBLE);
+
+                cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
+                cameraSubToolsLayout.setVisibility(View.GONE);
+                cameraSubToolsRecycler.setVisibility(View.GONE);
+                cameraAdjustToolsRecycler.setVisibility(View.GONE);
+                cameraEffectsLLayout.setVisibility(View.GONE);
+
+                break;
+
+            case R.id.cameraBlankLayoutBottom:
+                if(Constants.isAdjustCameraImage){
+                    cameraSelectedImageShape.setImageBitmap(Constants.capturedImageBitmap);
+                    cameraSelectedImageRLayout.setVisibility(View.VISIBLE);
+                    cameraEditToolsRecycleView.setVisibility(View.VISIBLE);
+                    blankCameraLayoutTop.setVisibility(View.VISIBLE);
+                    cameraBlankLayoutBottom.setVisibility(View.VISIBLE);
+                    cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
+                    cameraSubToolsLayout.setVisibility(View.GONE);
+                    cameraSubToolsRecycler.setVisibility(View.GONE);
+                    cameraAdjustToolsRecycler.setVisibility(View.GONE);
+                    cameraEffectsLLayout.setVisibility(View.GONE);
+                    addToUndoReodList();
+                    Constants.isAdjustCameraImage=false;
+                }
+                cameraSelectedImageRLayout.setVisibility(View.VISIBLE);
+                cameraEditToolsRecycleView.setVisibility(View.VISIBLE);
+                blankCameraLayoutTop.setVisibility(View.VISIBLE);
+                cameraBlankLayoutBottom.setVisibility(View.VISIBLE);
+                cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
+                cameraSubToolsLayout.setVisibility(View.GONE);
+                cameraSubToolsRecycler.setVisibility(View.GONE);
+                cameraAdjustToolsRecycler.setVisibility(View.GONE);
+                cameraEffectsLLayout.setVisibility(View.GONE);
+                break;
+
+
+            case R.id.adjustClose:
+                Constants.isAdjustSelected = false;
+                if (Constants.isAdjustCameraImage) {
+                    cameraSelectedImageRLayout.setVisibility(View.VISIBLE);
+                    cameraBlankLayoutBottom.setVisibility(View.VISIBLE);
+                    cameraEditToolsRecycleView.setVisibility(View.VISIBLE);
+                    cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
+                    cameraSubToolsLayout.setVisibility(View.GONE);
+                    cameraSubToolsRecycler.setVisibility(View.GONE);
+                    cameraAdjustToolsRecycler.setVisibility(View.GONE);
+                    cameraEffectsLLayout.setVisibility(View.GONE);
+                    Constants.isAdjustCameraImage = false;
+                }
+                cameraSelectedImageRLayout.setVisibility(View.VISIBLE);
+                cameraEditToolsRecycleView.setVisibility(View.VISIBLE);
+                cameraBlankLayoutBottom.setVisibility(View.VISIBLE);
+                cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
+                cameraSubToolsLayout.setVisibility(View.GONE);
+                cameraSubToolsRecycler.setVisibility(View.GONE);
+                cameraAdjustToolsRecycler.setVisibility(View.GONE);
+                cameraEffectsLLayout.setVisibility(View.GONE);
+
+                break;
+
+
+            case R.id.adjustDone:
+                Constants.isAdjustSelected = false;
+                if (Constants.isAdjustCameraImage) {
+                    cameraSelectedImageRLayout.setVisibility(View.VISIBLE);
+                    cameraBlankLayoutBottom.setVisibility(View.VISIBLE);
+                    cameraEditToolsRecycleView.setVisibility(View.VISIBLE);
+                    cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
+                    cameraSubToolsLayout.setVisibility(View.GONE);
+                    cameraSubToolsRecycler.setVisibility(View.GONE);
+                    cameraAdjustToolsRecycler.setVisibility(View.GONE);
+                    cameraEffectsLLayout.setVisibility(View.GONE);
+                    Constants.isAdjustCameraImage = false;
+                }
+
+                cameraSelectedImageRLayout.setVisibility(View.VISIBLE);
+                cameraEditToolsRecycleView.setVisibility(View.VISIBLE);
+                cameraBlankLayoutBottom.setVisibility(View.VISIBLE);
+
+                cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
+                cameraSubToolsLayout.setVisibility(View.GONE);
+                cameraSubToolsRecycler.setVisibility(View.GONE);
+                cameraAdjustToolsRecycler.setVisibility(View.GONE);
+                cameraEffectsLLayout.setVisibility(View.GONE);
+
+                /*save*/
+                cameraSelectedImageShape.setLayoutParams(
+                        new android.widget.RelativeLayout.LayoutParams(
+                                ViewGroup.LayoutParams.WRAP_CONTENT,
+                                ViewGroup.LayoutParams.WRAP_CONTENT
+                        ));
+                cameraSelectedImageShape.setScaleType(ImageView.ScaleType.FIT_CENTER);
+
+                if (cameraSelectedImageShape.getRotation() > 0) {
+                    Bitmap bitmap = createBitmapFromLayout(cameraSelectedImageRLayout);
+                    Constants.capturedImageBitmap = bitmap;
+                    cameraSelectedImageShape.setImageBitmap(bitmap);
+                } else if (cameraSelectedImageShape.getRotation() == 0) {
+                    Bitmap bitmap = ((BitmapDrawable) cameraSelectedImageShape.getDrawable()).getBitmap();
+                    Constants.capturedImageBitmap = bitmap;
+                    cameraSelectedImageShape.setImageBitmap(bitmap);
+                }
+
+                cameraSelectedImageShape.setLayoutParams(
+                        new android.widget.RelativeLayout.LayoutParams(
+                                ViewGroup.LayoutParams.MATCH_PARENT,
+                                ViewGroup.LayoutParams.MATCH_PARENT
+                        ));
+                cameraSelectedImageShape.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                break;
+        }
+    }
+
+    /****************onSeekbar Start**********************/
+    @Override
+    public void onBrightnessChanged(final int brightness) {
+        brightnessFinal = brightness;
+        Filter myFilter = new Filter();
+        myFilter.addSubFilter(new BrightnessSubFilter(brightness));
+         //Bitmap finalImage = ((BitmapDrawable) cameraSelectedImageShape.getDrawable()).getBitmap();
+        cameraSelectedImageShape.setImageBitmap(myFilter.processFilter(finalImage.copy(Bitmap.Config.ARGB_8888, true)));
+    }
+
+    @Override
+    public void onContrastChanged(final float contrast) {
+        contrastFinal = contrast;
+        Filter myFilter = new Filter();
+        myFilter.addSubFilter(new ContrastSubFilter(contrast));
+        cameraSelectedImageShape.setImageBitmap(myFilter.processFilter(finalImage.copy(Bitmap.Config.ARGB_8888, true)));
+    }
+
+    @Override
+    public void onSaturationChanged(final float saturation) {
+        saturationFinal = saturation;
+        Filter myFilter = new Filter();
+        myFilter.addSubFilter(new SaturationSubfilter(saturation));
+        cameraSelectedImageShape.setImageBitmap(myFilter.processFilter(finalImage.copy(Bitmap.Config.ARGB_8888, true)));
+    }
+
+    @Override
+    public void onColorOverlaySubFilter(int depth, float red, float green, float blue) {
+        Filter myFilter = new Filter();
+        myFilter.addSubFilter(new ColorOverlaySubFilter(depth , red , green , blue));
+        cameraSelectedImageShape.setImageBitmap(myFilter.processFilter(finalImage.copy(Bitmap.Config.ARGB_8888, true)));
+    }
+
+    @Override
+    public void onVignetteSubfilter(Context context, int alpha) {
+        Filter myFilter = new Filter();
+        myFilter.addSubFilter(new VignetteSubfilter(context , alpha));
+        cameraSelectedImageShape.setImageBitmap(myFilter.processFilter(finalImage.copy(Bitmap.Config.ARGB_8888, true)));
+
+    }
+
+    @Override
+    public void onToneCurveSubFilter( int  redKnotsX, int  redKnotsY, int  greenKnotsX, int  greenKnotsY, int blueKnotsX , int blueKnotsY) {
+        Filter myFilter = new Filter();
+        Point[] rgbKnots;
+        rgbKnots = new Point[3];
+
+        rgbKnots[0] = new Point(redKnotsX, redKnotsY);
+        rgbKnots[1] = new Point(175-greenKnotsX, 139-greenKnotsY);
+        rgbKnots[2] = new Point(255-blueKnotsX, 255-blueKnotsY);
+
+        myFilter.addSubFilter(new ToneCurveSubFilter(rgbKnots, null, null, null));
+        cameraSelectedImageShape.setImageBitmap(myFilter.processFilter(finalImage.copy(Bitmap.Config.ARGB_8888, true)));
+    }
+
+
+
+    /************************Brightness / Contrast Start*******************/
+
+    @Override
+    public void onProgressChanged(SeekBar seekBar, int progress, boolean b) {
+
+        if (seekBar.getId() == R.id.cameraBrightnessSeekBar) {
+            int progressBrightness = cameraBrightnessSeekBar.getProgress();
+            onBrightnessChanged(progressBrightness-100);
+            //progressBright = progressBrightness;
+        }
+
+        if (seekBar.getId() == R.id.cameraContrastSeekBar) {
+            int progressContrast = cameraContrastSeekBar.getProgress();
+            progressContrast += 10;
+            float floatVal = .10f * progressContrast;
+            onContrastChanged(floatVal);
+        }
+        if (seekBar.getId() == R.id.cameraSaturationSeekBar) {
+            // saturation values are b/w 0.0f - 3.0f
+            int progressSaturation = cameraSaturationSeekBar.getProgress();
+            float floatVal = .10f * progressSaturation;
+            onSaturationChanged(floatVal);
+        }
+
+        if (seekBar.getId() == R.id.cameraVignetteSeekBar) {
+            int progressVignette = cameraVignetteSeekBar.getProgress();
+            onVignetteSubfilter(this , progressVignette);
+        }
+        if (seekBar.getId() == R.id.cameraShadowSeekBar) {
+            int progressShadow = cameraShadowSeekBar.getProgress();
+            onVignetteSubfilter(this , progressShadow*3);
+        }
+        if (seekBar.getId() == R.id.cameraHighlightSeekBar) {
+            int progressHighlight = (int)cameraHighlightSeekBar.getProgress()/2;
+            onBrightnessChanged(progressHighlight);
+        }
+        if (seekBar.getId() == R.id.cameraTempSeekBar) {
+
+//            onColorOverlaySubFilter(depth , red ,green, blue );
+            if (cameraTempSeekBar.getProgress() > 0 && cameraTempSeekBar.getProgress() < 30){
+                int progressTempSeek = cameraTempSeekBar.getProgress() ;
+                float red = .02f * progressTempSeek;
+                float green = .01f * progressTempSeek;
+                float blue = .01f * progressTempSeek;
+                onColorOverlaySubFilter(progressTempSeek, red, green, blue);
+            }
+            if (cameraTempSeekBar.getProgress() > 30 && cameraTempSeekBar.getProgress() < 65){
+                int progressTempSeek = cameraTempSeekBar.getProgress() ;
+                float red = .01f * progressTempSeek;
+                float green = .02f * progressTempSeek;
+                float blue = .01f * progressTempSeek;
+                onColorOverlaySubFilter(progressTempSeek, red, green, blue);
+            }
+            if (cameraTempSeekBar.getProgress() > 65 && cameraTempSeekBar.getProgress() <=100){
+                int progressTempSeek = cameraTempSeekBar.getProgress() ;
+                float red = .01f * progressTempSeek;
+                float green = .01f * progressTempSeek;
+                float blue = .02f * progressTempSeek;
+                onColorOverlaySubFilter(progressTempSeek, red, green, blue);
+            }
+        }
+        if (seekBar.getId() == R.id.cameraDenoiseSeekBar) {
+            //CustomProgressDialog.show(cameraActivity.this, "Processing...");
+        }
+        if (seekBar.getId() == R.id.cameraTintSeekBar) {
+            int progressTintSeek = cameraTintSeekBar.getProgress() ;
+            cameraSelectedImageShape.setImageBitmap(applyTintEffect(finalImage.copy(Bitmap.Config.ARGB_8888, true), progressTintSeek*5));
+        }
+
+        if (seekBar.getId() == R.id.cameraCurveSeekBar) {
+            int  progressCurve = cameraCurveSeekBar.getProgress();
+            //onToneCurveSubFilter(progressCurve, progressCurve, progressCurve*5,progressCurve*9, progressCurve*15 , progressCurve*25);
+            onToneCurveSubFilter(progressCurve, progressCurve, progressCurve,progressCurve, progressCurve , progressCurve);
+        }
+        if (seekBar.getId() == R.id.cameraColorBalanceSeekBar) {
+            if (cameraColorBalanceSeekBar.getProgress() > 0 && cameraColorBalanceSeekBar.getProgress() < 30){
+                int progressColorBalance = cameraColorBalanceSeekBar.getProgress() ;
+                //int depth = progress ;
+                float red = .01f * progressColorBalance;
+                float green = .3f * progressColorBalance;
+                float blue = .01f * progressColorBalance;
+
+                onColorOverlaySubFilter(progressColorBalance, red, green, blue);
+            }
+            if (cameraColorBalanceSeekBar.getProgress() > 30 && cameraColorBalanceSeekBar.getProgress() < 65){
+                int progressColorBalance = cameraColorBalanceSeekBar.getProgress() ;
+                float red = .01f * progressColorBalance;
+                float green = .01f * progressColorBalance;
+                float blue = .03f * progressColorBalance;
+
+                onColorOverlaySubFilter(progressColorBalance, red, green, blue);
+            }
+            if (cameraColorBalanceSeekBar.getProgress() > 65 && cameraColorBalanceSeekBar.getProgress() <=100){
+                int progressColorBalance = cameraColorBalanceSeekBar.getProgress() ;
+                float red = .03f * progressColorBalance;
+                float green = .01f * progressColorBalance;
+                float blue = .01f * progressColorBalance;
+
+                onColorOverlaySubFilter(progressColorBalance, red, green, blue);
+            }
+        }
+
+
+    }
+
+
+    @Override
+    public void onStartTrackingTouch(SeekBar seekBar) {
+        //onEditCompleted();
+
+    }
+
+    @Override
+    public void onStopTrackingTouch(SeekBar seekBar) {
+        //onEditCompleted();
+
+        if (seekBar.getId() == R.id.cameraDenoiseSeekBar) {
+            CustomProgressDialog.show(CameraActivity.this, "Processing...");
+            Handler handler = new Handler();
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    cameraSelectedImageShape.setImageBitmap(onNoise(finalImage.copy(Bitmap.Config.ARGB_8888, true)));
+
+                    cameraSelectedImageShape.setImageBitmap(onAdjustFinalImage());
+
+                    CustomProgressDialog.dismiss();
+                }
+            }, 1000);
+        }
+
+        if (seekBar.getId() == R.id.cameraSharpnessSeekBar) {
+            cameraSelectedImageShape.setImageBitmap(ImageFilter.applyFilter(finalImage.copy(Bitmap.Config.ARGB_8888, true), ImageFilter.Filter.SHARPEN));
+        }
+
+    }
+
+    /************************Brightness / Contrast End*******************/
+
+
+    /****************onSeekbar End**********************/
+
+    @Override
+    public void onEditStarted() {
+
+    }
+    @Override
+    public void onEditCompleted() {
+        //Bitmap mFilteredImage = ((BitmapDrawable) cameraSelectedImageShape.getDrawable()).getBitmap();
+        final Bitmap bitmap = filteredImage.copy(Bitmap.Config.ARGB_8888, true);
+        Filter myFilter = new Filter();
+        myFilter.addSubFilter(new BrightnessSubFilter(brightnessFinal));
+        myFilter.addSubFilter(new ContrastSubFilter(contrastFinal));
+        myFilter.addSubFilter(new SaturationSubfilter(saturationFinal));
+        finalImage = myFilter.processFilter(bitmap);
+        Constants.capturedImageBitmap = finalImage;
+    }
 
     private void loadImageFilters( ) {
         originalImage = Constants.capturedImageBitmap ;
@@ -398,211 +1011,7 @@ public class CameraActivity  extends AppCompatActivity implements FiltersListFra
         CustomProgressDialog.dismiss();
     }
 
-
-    @Override
-    public void onClick(View view) {
-        switch (view.getId()) {
-            case R.id.idCameraEditBackLLayout:
-
-                if(Constants.isAdjustCameraImage){
-                    Constants.capturedImageBitmap = createBitmapFromLayout(adjustCameraPhotoRLayout);
-                    cameraSelectedImageShape.setImageBitmap(Constants.capturedImageBitmap);
-
-                    adjustCameraRLayout.setVisibility(View.GONE);
-                    cameraSelectedImageRLayout.setVisibility(View.VISIBLE);
-
-                    blankCameraLayoutBottom.setVisibility(View.VISIBLE);
-                    cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
-                    cameraEffectsLLayout.setVisibility(View.GONE);
-                    cameraSubToolsLayout.setVisibility(View.GONE);
-                    cameraSubToolsRecycler.setVisibility(View.GONE);
-                    addToUndoReodList();
-                    Constants.isAdjustCameraImage=false;
-                }
-
-                adjustCameraRLayout.setVisibility(View.GONE);
-                cameraSelectedImageRLayout.setVisibility(View.VISIBLE);
-
-                blankCameraLayoutBottom.setVisibility(View.VISIBLE);
-                cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
-                cameraEffectsLLayout.setVisibility(View.GONE);
-                cameraSubToolsLayout.setVisibility(View.GONE);
-                cameraSubToolsRecycler.setVisibility(View.GONE);
-                show_alert_back("Exit", "Are you sure you want to exit Editor ?");
-                break;
-
-
-            case R.id.undoCameraImageLayout:
-                Constants.isAdjustCameraImage = false;
-
-                adjustCameraRLayout.setVisibility(View.GONE);
-                cameraSelectedImageRLayout.setVisibility(View.VISIBLE);
-
-                blankCameraLayoutBottom.setVisibility(View.VISIBLE);
-                cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
-                cameraEffectsLLayout.setVisibility(View.GONE);
-                cameraSubToolsLayout.setVisibility(View.GONE);
-                cameraSubToolsRecycler.setVisibility(View.GONE);
-
-                Log.e("Undo List Size", pathForTempList.size()+"");
-                Log.e("Undo Index " ,  currentShowingIndex+"");
-
-                if(currentShowingIndex>pathForTempList.size()){
-                    currentShowingIndex = currentShowingIndex-1;
-                    return;
-                }
-
-                hideShowUndoRedo();
-                if(currentShowingIndex >=1) {
-                    onUndoPressed( );
-                }else {Log.e("" ,"");}
-
-                break;
-
-
-
-            case R.id.redoCameraImageLayout:
-                Constants.isAdjustCameraImage = false;
-                cameraSelectedImageRLayout.setVisibility(View.VISIBLE);
-                adjustCameraRLayout.setVisibility(View.GONE);
-
-                blankCameraLayoutBottom.setVisibility(View.VISIBLE);
-                cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
-                cameraEffectsLLayout.setVisibility(View.GONE);
-                cameraSubToolsLayout.setVisibility(View.GONE);
-                cameraSubToolsRecycler.setVisibility(View.GONE);
-
-                Log.e("Redo List Size", pathForTempList.size()+"");
-                Log.e("Redo Index " ,  currentShowingIndex+"");
-                if(currentShowingIndex>pathForTempList.size()){
-                    currentShowingIndex = currentShowingIndex-1;
-                    return;
-                }
-                hideShowUndoRedo();
-                if(currentShowingIndex < pathForTempList.size()-1) {
-                    onRedoPressed();
-                }else {Log.e("" ,"");}
-
-                break;
-
-            case R.id.idCameraSaveLayout:
-
-                if(Constants.isAdjustCameraImage){
-
-                    Constants.capturedImageBitmap = createBitmapFromLayout(adjustCameraPhotoRLayout);
-
-                    cameraSelectedImageShape.setImageBitmap(Constants.capturedImageBitmap);
-
-                    adjustCameraRLayout.setVisibility(View.GONE);
-                    cameraSelectedImageRLayout.setVisibility(View.VISIBLE);
-
-                    blankCameraLayoutBottom.setVisibility(View.VISIBLE);
-                    cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
-                    cameraEffectsLLayout.setVisibility(View.GONE);
-                    cameraSubToolsLayout.setVisibility(View.GONE);
-                    cameraSubToolsRecycler.setVisibility(View.GONE);
-                    addToUndoReodList();
-                    Constants.isAdjustCameraImage=false;
-                }
-
-                adjustCameraRLayout.setVisibility(View.GONE);
-                cameraSelectedImageRLayout.setVisibility(View.VISIBLE);
-
-                blankCameraLayoutBottom.setVisibility(View.VISIBLE);
-                cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
-                cameraEffectsLLayout.setVisibility(View.GONE);
-                cameraSubToolsLayout.setVisibility(View.GONE);
-                cameraSubToolsRecycler.setVisibility(View.GONE);
-
-
-                cameraSelectedImageShape.setLayoutParams(
-                        new android.widget.RelativeLayout.LayoutParams(
-                                ViewGroup.LayoutParams.WRAP_CONTENT,
-                                ViewGroup.LayoutParams.WRAP_CONTENT
-                        ) );
-                cameraSelectedImageShape.setScaleType(ImageView.ScaleType.FIT_CENTER);
-
-                if(cameraSelectedImageShape.getRotation()>0){
-                    Bitmap bitmap = createBitmapFromLayout(cameraSelectedImageRLayout);
-                    Utilities.saveSelfieProImage(mContext , bitmap);
-                }else if(cameraSelectedImageShape.getRotation()==0) {
-                   Bitmap bitmap = ((BitmapDrawable) cameraSelectedImageShape.getDrawable()).getBitmap();
-                   Utilities.saveSelfieProImage(mContext , bitmap);
-                }
-
-                cameraSelectedImageShape.setLayoutParams(
-                        new android.widget.RelativeLayout.LayoutParams(
-                                ViewGroup.LayoutParams.MATCH_PARENT,
-                                ViewGroup.LayoutParams.MATCH_PARENT
-                        ) );
-                cameraSelectedImageShape.setScaleType(ImageView.ScaleType.FIT_CENTER);
-
-                if(addprefs!=null)
-                    dispInterestialAdds();
-
-                break;
-
-            case R.id.blankCameraLayoutTop:
-                if(Constants.isAdjustCameraImage){
-                    Constants.capturedImageBitmap = createBitmapFromLayout(adjustCameraPhotoRLayout);
-                    cameraSelectedImageShape.setImageBitmap(Constants.capturedImageBitmap);
-
-                    adjustCameraRLayout.setVisibility(View.GONE);
-                    cameraSelectedImageRLayout.setVisibility(View.VISIBLE);
-
-                    blankCameraLayoutTop.setVisibility(View.VISIBLE);
-                    blankCameraLayoutBottom.setVisibility(View.VISIBLE);
-                    cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
-                    cameraEffectsLLayout.setVisibility(View.GONE);
-                    cameraSubToolsLayout.setVisibility(View.GONE);
-                    cameraSubToolsRecycler.setVisibility(View.GONE);
-
-                    addToUndoReodList();
-                    Constants.isAdjustCameraImage=false;
-                }
-
-                adjustCameraRLayout.setVisibility(View.GONE);
-                cameraSelectedImageRLayout.setVisibility(View.VISIBLE);
-
-                blankCameraLayoutTop.setVisibility(View.VISIBLE);
-                blankCameraLayoutBottom.setVisibility(View.VISIBLE);
-                cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
-                cameraEffectsLLayout.setVisibility(View.GONE);
-                cameraSubToolsLayout.setVisibility(View.GONE);
-                cameraSubToolsRecycler.setVisibility(View.GONE);
-                break;
-
-            case R.id.blankCameraLayoutBottom:
-                if(Constants.isAdjustCameraImage){
-                    Constants.capturedImageBitmap = createBitmapFromLayout(adjustCameraPhotoRLayout);
-                    cameraSelectedImageShape.setImageBitmap(Constants.capturedImageBitmap);
-
-                    adjustCameraRLayout.setVisibility(View.GONE);
-                    cameraSelectedImageRLayout.setVisibility(View.VISIBLE);
-
-                    blankCameraLayoutTop.setVisibility(View.VISIBLE);
-                    blankCameraLayoutBottom.setVisibility(View.VISIBLE);
-                    cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
-                    cameraEffectsLLayout.setVisibility(View.GONE);
-                    cameraSubToolsLayout.setVisibility(View.GONE);
-                    cameraSubToolsRecycler.setVisibility(View.GONE);
-                    addToUndoReodList();
-                    Constants.isAdjustCameraImage=false;
-                }
-
-                adjustCameraRLayout.setVisibility(View.GONE);
-                cameraSelectedImageRLayout.setVisibility(View.VISIBLE);
-
-                blankCameraLayoutTop.setVisibility(View.VISIBLE);
-                blankCameraLayoutBottom.setVisibility(View.VISIBLE);
-                cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
-                cameraEffectsLLayout.setVisibility(View.GONE);
-                cameraSubToolsLayout.setVisibility(View.GONE);
-                cameraSubToolsRecycler.setVisibility(View.GONE);
-                break;
-        }
-    }
-
+    /*****************************Display Interestial Adds****************************/
     private void dispInterestialAdds() {
         AddMobUtils addutil = new AddMobUtils();
         if (AddConstants.checkIsOnline(mContext) && addprefs != null) {
@@ -646,14 +1055,12 @@ public class CameraActivity  extends AppCompatActivity implements FiltersListFra
                             }
 
                             cameraSelectedImageShape.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                            Constants.cameraOrignalBitmap = Constants.capturedImageBitmap;
                             cameraSelectedImageShape.setImageBitmap(Constants.capturedImageBitmap);
                             //cameraSelectedImageShape.setColorFilter(Utilities.setBrightness(110));
                             cameraSelectedImageShape.setRotation(0);
                             fixAntiAlias(cameraSelectedImageShape);
 
-
-                            cameraBrightness.setProgress(0);
-                            cameraContrast.setProgress(0);
 
                             deleteTempExtraFile();
                             addToUndoReodList();
@@ -743,6 +1150,376 @@ public class CameraActivity  extends AppCompatActivity implements FiltersListFra
         Log.e("Crop Result" , " Cancelled ");
     }
 
+    /****************AdjustTools Start**********************/
+    @Override
+    public void onAdjustTollsSelected(AdjustToolsType cameraAdjustToolsType) {
+
+        switch (cameraAdjustToolsType) {
+
+            case RESET:
+
+                addToUndoReodList();
+
+                cameraBlankLayoutBottom.setVisibility(View.VISIBLE);
+                cameraEditToolsRecycleView.setVisibility(View.GONE);
+                cameraSubToolsLayout.setVisibility(View.GONE);
+                cameraBrightnessSeekBar.setVisibility(View.GONE);
+                cameraContrastSeekBar.setVisibility(View.GONE);
+                cameraSaturationSeekBar.setVisibility(View.GONE);
+                cameraSharpnessSeekBar.setVisibility(View.GONE);
+                cameraVignetteSeekBar.setVisibility(View.GONE);
+                cameraShadowSeekBar.setVisibility(View.GONE);
+                cameraHighlightSeekBar.setVisibility(View.GONE);
+                cameraTempSeekBar.setVisibility(View.GONE);
+                cameraTintSeekBar.setVisibility(View.GONE);
+                cameraDenoiseSeekBar.setVisibility(View.GONE);
+                cameraCurveSeekBar.setVisibility(View.GONE);
+                cameraColorBalanceSeekBar.setVisibility(View.GONE);
+
+                cameraAdjustToolsRecycler.setVisibility(View.VISIBLE);
+                cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
+
+                cameraSubToolsRecycler.setVisibility(View.GONE);
+                cameraEffectsLLayout.setVisibility(View.GONE);
+
+                cameraSelectedImageShape.setImageBitmap(Constants.cameraOrignalBitmap);
+                cameraSelectedImageShape.setRotation(0);
+                fixAntiAlias(cameraSelectedImageShape);
+                break;
+
+
+            case BRIGHTNESS:
+                addToUndoReodList();
+                cameraBlankLayoutBottom.setVisibility(View.GONE);
+                cameraEditToolsRecycleView.setVisibility(View.GONE);
+                cameraSubToolsLayout.setVisibility(View.VISIBLE);
+
+                cameraBrightnessSeekBar.setVisibility(View.VISIBLE);
+                cameraContrastSeekBar.setVisibility(View.GONE);
+                cameraSaturationSeekBar.setVisibility(View.GONE);
+                cameraSharpnessSeekBar.setVisibility(View.GONE);
+                cameraVignetteSeekBar.setVisibility(View.GONE);
+                cameraShadowSeekBar.setVisibility(View.GONE);
+                cameraHighlightSeekBar.setVisibility(View.GONE);
+                cameraTempSeekBar.setVisibility(View.GONE);
+                cameraTintSeekBar.setVisibility(View.GONE);
+                cameraDenoiseSeekBar.setVisibility(View.GONE);
+                cameraCurveSeekBar.setVisibility(View.GONE);
+                cameraColorBalanceSeekBar.setVisibility(View.GONE);
+
+                cameraAdjustToolsRecycler.setVisibility(View.VISIBLE);
+                cameraAdjustSeekbarLLayout.setVisibility(View.VISIBLE);
+                cameraSubToolsRecycler.setVisibility(View.GONE);
+                cameraEffectsLLayout.setVisibility(View.GONE);
+                finalImage = onAdjustFinalImage();
+
+                // keeping brightness value b/w -100 / +100
+                cameraBrightnessSeekBar.setMax(200);
+                cameraBrightnessSeekBar.setProgress(100);
+                break;
+
+            case CONTRAST:
+                addToUndoReodList();
+                // keeping contrast value b/w 1.0 - 3.0
+                cameraContrastSeekBar.setMax(30);
+                cameraContrastSeekBar.setProgress(0);
+
+                cameraBlankLayoutBottom.setVisibility(View.GONE);
+                cameraEditToolsRecycleView.setVisibility(View.GONE);
+                cameraSubToolsLayout.setVisibility(View.VISIBLE);
+
+                cameraBrightnessSeekBar.setVisibility(View.GONE);
+                cameraContrastSeekBar.setVisibility(View.VISIBLE);
+                cameraSaturationSeekBar.setVisibility(View.GONE);
+                cameraSharpnessSeekBar.setVisibility(View.GONE);
+                cameraVignetteSeekBar.setVisibility(View.GONE);
+                cameraShadowSeekBar.setVisibility(View.GONE);
+                cameraHighlightSeekBar.setVisibility(View.GONE);
+                cameraTempSeekBar.setVisibility(View.GONE);
+                cameraTintSeekBar.setVisibility(View.GONE);
+                cameraDenoiseSeekBar.setVisibility(View.GONE);
+                cameraCurveSeekBar.setVisibility(View.GONE);
+                cameraColorBalanceSeekBar.setVisibility(View.GONE);
+
+                cameraAdjustToolsRecycler.setVisibility(View.VISIBLE);
+                cameraAdjustSeekbarLLayout.setVisibility(View.VISIBLE);
+                cameraSubToolsRecycler.setVisibility(View.GONE);
+                cameraEffectsLLayout.setVisibility(View.GONE);
+                finalImage = onAdjustFinalImage();
+
+                break;
+            case SATURATION:
+                addToUndoReodList();
+                // keeping saturation value b/w 0.0 - 3.0
+                cameraSaturationSeekBar.setMax(30);
+                cameraSaturationSeekBar.setProgress(10);
+
+                cameraBlankLayoutBottom.setVisibility(View.GONE);
+                cameraEditToolsRecycleView.setVisibility(View.GONE);
+                cameraSubToolsLayout.setVisibility(View.VISIBLE);
+
+                cameraBrightnessSeekBar.setVisibility(View.GONE);
+                cameraContrastSeekBar.setVisibility(View.GONE);
+                cameraSaturationSeekBar.setVisibility(View.VISIBLE);
+                cameraSharpnessSeekBar.setVisibility(View.GONE);
+                cameraVignetteSeekBar.setVisibility(View.GONE);
+                cameraShadowSeekBar.setVisibility(View.GONE);
+                cameraHighlightSeekBar.setVisibility(View.GONE);
+                cameraTempSeekBar.setVisibility(View.GONE);
+                cameraTintSeekBar.setVisibility(View.GONE);
+                cameraDenoiseSeekBar.setVisibility(View.GONE);
+                cameraCurveSeekBar.setVisibility(View.GONE);
+                cameraColorBalanceSeekBar.setVisibility(View.GONE);
+
+                cameraAdjustToolsRecycler.setVisibility(View.VISIBLE);
+                cameraAdjustSeekbarLLayout.setVisibility(View.VISIBLE);
+                cameraSubToolsRecycler.setVisibility(View.GONE);
+                cameraEffectsLLayout.setVisibility(View.GONE);
+                finalImage = onAdjustFinalImage();
+                break;
+            case SHARPNESS:
+                addToUndoReodList();
+                cameraBlankLayoutBottom.setVisibility(View.GONE);
+                cameraEditToolsRecycleView.setVisibility(View.GONE);
+                cameraSubToolsLayout.setVisibility(View.VISIBLE);
+
+                cameraBrightnessSeekBar.setVisibility(View.GONE);
+                cameraContrastSeekBar.setVisibility(View.GONE);
+                cameraSaturationSeekBar.setVisibility(View.GONE);
+                cameraSharpnessSeekBar.setVisibility(View.VISIBLE);
+                cameraVignetteSeekBar.setVisibility(View.GONE);
+                cameraShadowSeekBar.setVisibility(View.GONE);
+                cameraHighlightSeekBar.setVisibility(View.GONE);
+                cameraTempSeekBar.setVisibility(View.GONE);
+                cameraTintSeekBar.setVisibility(View.GONE);
+                cameraDenoiseSeekBar.setVisibility(View.GONE);
+                cameraCurveSeekBar.setVisibility(View.GONE);
+                cameraColorBalanceSeekBar.setVisibility(View.GONE);
+
+                cameraAdjustToolsRecycler.setVisibility(View.VISIBLE);
+                cameraAdjustSeekbarLLayout.setVisibility(View.VISIBLE);
+                cameraSubToolsRecycler.setVisibility(View.GONE);
+                cameraEffectsLLayout.setVisibility(View.GONE);
+                finalImage = onAdjustFinalImage();
+
+                break;
+            case VIGNETTE:
+                addToUndoReodList();
+                cameraBlankLayoutBottom.setVisibility(View.GONE);
+                cameraEditToolsRecycleView.setVisibility(View.GONE);
+                cameraSubToolsLayout.setVisibility(View.VISIBLE);
+
+                cameraBrightnessSeekBar.setVisibility(View.GONE);
+                cameraContrastSeekBar.setVisibility(View.GONE);
+                cameraSaturationSeekBar.setVisibility(View.GONE);
+                cameraSharpnessSeekBar.setVisibility(View.GONE);
+                cameraVignetteSeekBar.setVisibility(View.VISIBLE);
+                cameraShadowSeekBar.setVisibility(View.GONE);
+                cameraHighlightSeekBar.setVisibility(View.GONE);
+                cameraTempSeekBar.setVisibility(View.GONE);
+                cameraTintSeekBar.setVisibility(View.GONE);
+                cameraDenoiseSeekBar.setVisibility(View.GONE);
+                cameraCurveSeekBar.setVisibility(View.GONE);
+                cameraColorBalanceSeekBar.setVisibility(View.GONE);
+
+                cameraAdjustToolsRecycler.setVisibility(View.VISIBLE);
+                cameraAdjustSeekbarLLayout.setVisibility(View.VISIBLE);
+                cameraSubToolsRecycler.setVisibility(View.GONE);
+                cameraEffectsLLayout.setVisibility(View.GONE);
+                finalImage = onAdjustFinalImage();
+                break;
+
+
+            case SHADOW:
+                addToUndoReodList();
+                cameraShadowSeekBar.setMax(80);
+                //cameraShadowSeekBar.setMax(0);
+                cameraBlankLayoutBottom.setVisibility(View.GONE);
+                cameraEditToolsRecycleView.setVisibility(View.GONE);
+                cameraSubToolsLayout.setVisibility(View.VISIBLE);
+
+                cameraBrightnessSeekBar.setVisibility(View.GONE);
+                cameraContrastSeekBar.setVisibility(View.GONE);
+                cameraSaturationSeekBar.setVisibility(View.GONE);
+                cameraSharpnessSeekBar.setVisibility(View.GONE);
+                cameraVignetteSeekBar.setVisibility(View.GONE);
+                cameraShadowSeekBar.setVisibility(View.VISIBLE);
+                cameraHighlightSeekBar.setVisibility(View.GONE);
+                cameraTempSeekBar.setVisibility(View.GONE);
+                cameraTintSeekBar.setVisibility(View.GONE);
+                cameraDenoiseSeekBar.setVisibility(View.GONE);
+                cameraCurveSeekBar.setVisibility(View.GONE);
+                cameraColorBalanceSeekBar.setVisibility(View.GONE);
+
+                cameraAdjustToolsRecycler.setVisibility(View.VISIBLE);
+                cameraAdjustSeekbarLLayout.setVisibility(View.VISIBLE);
+                cameraSubToolsRecycler.setVisibility(View.GONE);
+                cameraEffectsLLayout.setVisibility(View.GONE);
+                finalImage = onAdjustFinalImage();
+
+                break;
+            case HIGH_LIGHT:
+                addToUndoReodList();
+                cameraBlankLayoutBottom.setVisibility(View.GONE);
+                cameraEditToolsRecycleView.setVisibility(View.GONE);
+                cameraSubToolsLayout.setVisibility(View.VISIBLE);
+
+                cameraBrightnessSeekBar.setVisibility(View.GONE);
+                cameraContrastSeekBar.setVisibility(View.GONE);
+                cameraSaturationSeekBar.setVisibility(View.GONE);
+                cameraSharpnessSeekBar.setVisibility(View.GONE);
+                cameraVignetteSeekBar.setVisibility(View.GONE);
+                cameraShadowSeekBar.setVisibility(View.GONE);
+                cameraHighlightSeekBar.setVisibility(View.VISIBLE);
+                cameraTempSeekBar.setVisibility(View.GONE);
+                cameraTintSeekBar.setVisibility(View.GONE);
+                cameraDenoiseSeekBar.setVisibility(View.GONE);
+                cameraCurveSeekBar.setVisibility(View.GONE);
+                cameraColorBalanceSeekBar.setVisibility(View.GONE);
+
+                cameraAdjustToolsRecycler.setVisibility(View.VISIBLE);
+                cameraAdjustSeekbarLLayout.setVisibility(View.VISIBLE);
+                cameraSubToolsRecycler.setVisibility(View.GONE);
+                cameraEffectsLLayout.setVisibility(View.GONE);
+                finalImage = onAdjustFinalImage();
+                break;
+
+            case TEMP:
+                addToUndoReodList();
+                cameraTempSeekBar.setMax(100);
+                //cameraTempSeekBar.setProgress(0);
+
+                cameraBlankLayoutBottom.setVisibility(View.GONE);
+                cameraEditToolsRecycleView.setVisibility(View.GONE);
+                cameraSubToolsLayout.setVisibility(View.VISIBLE);
+
+                cameraBrightnessSeekBar.setVisibility(View.GONE);
+                cameraContrastSeekBar.setVisibility(View.GONE);
+                cameraSaturationSeekBar.setVisibility(View.GONE);
+                cameraSharpnessSeekBar.setVisibility(View.GONE);
+                cameraVignetteSeekBar.setVisibility(View.GONE);
+                cameraShadowSeekBar.setVisibility(View.GONE);
+                cameraHighlightSeekBar.setVisibility(View.GONE);
+                cameraTempSeekBar.setVisibility(View.VISIBLE);
+                cameraTintSeekBar.setVisibility(View.GONE);
+                cameraDenoiseSeekBar.setVisibility(View.GONE);
+                cameraCurveSeekBar.setVisibility(View.GONE);
+                cameraColorBalanceSeekBar.setVisibility(View.GONE);
+
+                cameraAdjustToolsRecycler.setVisibility(View.VISIBLE);
+                cameraAdjustSeekbarLLayout.setVisibility(View.VISIBLE);
+                cameraSubToolsRecycler.setVisibility(View.GONE);
+                cameraEffectsLLayout.setVisibility(View.GONE);
+                finalImage = onAdjustFinalImage();
+                break;
+            case TINT:
+                addToUndoReodList();
+                cameraBlankLayoutBottom.setVisibility(View.GONE);
+                cameraEditToolsRecycleView.setVisibility(View.GONE);
+                cameraSubToolsLayout.setVisibility(View.VISIBLE);
+
+                cameraBrightnessSeekBar.setVisibility(View.GONE);
+                cameraContrastSeekBar.setVisibility(View.GONE);
+                cameraSaturationSeekBar.setVisibility(View.GONE);
+                cameraSharpnessSeekBar.setVisibility(View.GONE);
+                cameraVignetteSeekBar.setVisibility(View.GONE);
+                cameraShadowSeekBar.setVisibility(View.GONE);
+                cameraHighlightSeekBar.setVisibility(View.GONE);
+                cameraTempSeekBar.setVisibility(View.GONE);
+                cameraTintSeekBar.setVisibility(View.VISIBLE);
+                cameraDenoiseSeekBar.setVisibility(View.GONE);
+                cameraCurveSeekBar.setVisibility(View.GONE);
+                cameraColorBalanceSeekBar.setVisibility(View.GONE);
+
+                cameraAdjustToolsRecycler.setVisibility(View.VISIBLE);
+                cameraAdjustSeekbarLLayout.setVisibility(View.VISIBLE);
+                cameraSubToolsRecycler.setVisibility(View.GONE);
+                cameraEffectsLLayout.setVisibility(View.GONE);
+                finalImage = onAdjustFinalImage();
+                break;
+            case DENOISE:
+                addToUndoReodList();
+                cameraBlankLayoutBottom.setVisibility(View.GONE);
+                cameraEditToolsRecycleView.setVisibility(View.GONE);
+                cameraSubToolsLayout.setVisibility(View.VISIBLE);
+
+                cameraBrightnessSeekBar.setVisibility(View.GONE);
+                cameraContrastSeekBar.setVisibility(View.GONE);
+                cameraSaturationSeekBar.setVisibility(View.GONE);
+                cameraSharpnessSeekBar.setVisibility(View.GONE);
+                cameraVignetteSeekBar.setVisibility(View.GONE);
+                cameraShadowSeekBar.setVisibility(View.GONE);
+                cameraHighlightSeekBar.setVisibility(View.GONE);
+                cameraTempSeekBar.setVisibility(View.GONE);
+                cameraTintSeekBar.setVisibility(View.GONE);
+                cameraDenoiseSeekBar.setVisibility(View.VISIBLE);
+                cameraCurveSeekBar.setVisibility(View.GONE);
+                cameraColorBalanceSeekBar.setVisibility(View.GONE);
+
+                cameraAdjustToolsRecycler.setVisibility(View.VISIBLE);
+                cameraAdjustSeekbarLLayout.setVisibility(View.VISIBLE);
+                cameraSubToolsRecycler.setVisibility(View.GONE);
+                cameraEffectsLLayout.setVisibility(View.GONE);
+                finalImage = onAdjustFinalImage();
+
+                break;
+            case CURVE:
+                addToUndoReodList();
+                cameraBlankLayoutBottom.setVisibility(View.GONE);
+                cameraEditToolsRecycleView.setVisibility(View.GONE);
+                cameraSubToolsLayout.setVisibility(View.VISIBLE);
+
+                cameraBrightnessSeekBar.setVisibility(View.GONE);
+                cameraContrastSeekBar.setVisibility(View.GONE);
+                cameraSaturationSeekBar.setVisibility(View.GONE);
+                cameraSharpnessSeekBar.setVisibility(View.GONE);
+                cameraVignetteSeekBar.setVisibility(View.GONE);
+                cameraShadowSeekBar.setVisibility(View.GONE);
+                cameraHighlightSeekBar.setVisibility(View.GONE);
+                cameraTempSeekBar.setVisibility(View.GONE);
+                cameraTintSeekBar.setVisibility(View.GONE);
+                cameraDenoiseSeekBar.setVisibility(View.GONE);
+                cameraCurveSeekBar.setVisibility(View.VISIBLE);
+                cameraColorBalanceSeekBar.setVisibility(View.GONE);
+
+                cameraAdjustToolsRecycler.setVisibility(View.VISIBLE);
+                cameraAdjustSeekbarLLayout.setVisibility(View.VISIBLE);
+                cameraSubToolsRecycler.setVisibility(View.GONE);
+                cameraEffectsLLayout.setVisibility(View.GONE);
+                finalImage = onAdjustFinalImage();
+                break;
+            case COLOR_BALANCE:
+                addToUndoReodList();
+                cameraColorBalanceSeekBar.setMax(100);
+                //cameraColorBalanceSeekBar.setProgress(0);
+
+                cameraBlankLayoutBottom.setVisibility(View.GONE);
+                cameraEditToolsRecycleView.setVisibility(View.GONE);
+                cameraSubToolsLayout.setVisibility(View.VISIBLE);
+
+                cameraBrightnessSeekBar.setVisibility(View.GONE);
+                cameraContrastSeekBar.setVisibility(View.GONE);
+                cameraSaturationSeekBar.setVisibility(View.GONE);
+                cameraSharpnessSeekBar.setVisibility(View.GONE);
+                cameraVignetteSeekBar.setVisibility(View.GONE);
+                cameraShadowSeekBar.setVisibility(View.GONE);
+                cameraHighlightSeekBar.setVisibility(View.GONE);
+                cameraTempSeekBar.setVisibility(View.GONE);
+                cameraTintSeekBar.setVisibility(View.GONE);
+                cameraDenoiseSeekBar.setVisibility(View.GONE);
+                cameraCurveSeekBar.setVisibility(View.GONE);
+
+                cameraColorBalanceSeekBar.setVisibility(View.VISIBLE);
+                cameraAdjustToolsRecycler.setVisibility(View.VISIBLE);
+                cameraAdjustSeekbarLLayout.setVisibility(View.VISIBLE);
+                cameraSubToolsRecycler.setVisibility(View.GONE);
+                cameraEffectsLLayout.setVisibility(View.GONE);
+                finalImage = onAdjustFinalImage();
+                break;
+        }
+    }
+
+    /****************AdjustTools End**********************/
     /**************Select Tolls  **********************/
     @Override
     public void onCameraEditTollsSelected(CameraEditToolsType cameraEditToolsType) {
@@ -751,27 +1528,22 @@ public class CameraActivity  extends AppCompatActivity implements FiltersListFra
             case CAMERA:
 
                 if(Constants.isAdjustCameraImage){
-                    Constants.capturedImageBitmap = createBitmapFromLayout(adjustCameraPhotoRLayout);
                     cameraSelectedImageShape.setImageBitmap(Constants.capturedImageBitmap);
-
-                    adjustCameraRLayout.setVisibility(View.GONE);
                     cameraSelectedImageRLayout.setVisibility(View.VISIBLE);
 
-                    blankCameraLayoutBottom.setVisibility(View.VISIBLE);
+                    cameraBlankLayoutBottom.setVisibility(View.VISIBLE);
                     cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
                     cameraEffectsLLayout.setVisibility(View.GONE);
                     cameraSubToolsLayout.setVisibility(View.GONE);
                     cameraSubToolsRecycler.setVisibility(View.GONE);
+
                     addToUndoReodList();
                     Constants.isAdjustCameraImage=false;
 
                 }
 
                 cameraSelectedImageRLayout.setVisibility(View.VISIBLE);
-                adjustCameraRLayout.setVisibility(View.GONE);
-
-
-                blankCameraLayoutBottom.setVisibility(View.VISIBLE);
+                cameraBlankLayoutBottom.setVisibility(View.VISIBLE);
                 cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
                 cameraEffectsLLayout.setVisibility(View.GONE);
                 cameraSubToolsLayout.setVisibility(View.GONE);
@@ -786,34 +1558,28 @@ public class CameraActivity  extends AppCompatActivity implements FiltersListFra
 
             case TOOLS:
                 if(Constants.isAdjustCameraImage){
-                    Constants.capturedImageBitmap = createBitmapFromLayout(adjustCameraPhotoRLayout);
+                    //Constants.capturedImageBitmap = createBitmapFromLayout(adjustCameraPhotoRLayout);
                     cameraSelectedImageShape.setImageBitmap(Constants.capturedImageBitmap);
 
-                    adjustCameraRLayout.setVisibility(View.GONE);
                     cameraSelectedImageRLayout.setVisibility(View.VISIBLE);
-
-                    blankCameraLayoutBottom.setVisibility(View.VISIBLE);
+                    cameraBlankLayoutBottom.setVisibility(View.VISIBLE);
                     cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
                     cameraEffectsLLayout.setVisibility(View.GONE);
                     cameraSubToolsLayout.setVisibility(View.GONE);
                     cameraSubToolsRecycler.setVisibility(View.GONE);
                     addToUndoReodList();
                     Constants.isAdjustCameraImage=false;
-
                 }
-
                 cameraSelectedImageRLayout.setVisibility(View.VISIBLE);
-                adjustCameraRLayout.setVisibility(View.GONE);
-
                 cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
                 cameraEffectsLLayout.setVisibility(View.GONE);
                 Constants.capturedImageBitmap = ((BitmapDrawable) cameraSelectedImageShape.getDrawable()).getBitmap();
                 if(cameraSubToolsRecycler.getVisibility() == View.VISIBLE ){
-                    blankCameraLayoutBottom.setVisibility(View.VISIBLE);
+                    cameraBlankLayoutBottom.setVisibility(View.VISIBLE);
                     cameraSubToolsLayout.setVisibility(View.GONE);
                     cameraSubToolsRecycler.setVisibility(View.GONE);
                 }else {
-                    blankCameraLayoutBottom.setVisibility(View.GONE);
+                    cameraBlankLayoutBottom.setVisibility(View.GONE);
                     cameraSubToolsLayout.setVisibility(View.VISIBLE);
                     cameraSubToolsRecycler.setVisibility(View.VISIBLE);
                 }
@@ -822,14 +1588,11 @@ public class CameraActivity  extends AppCompatActivity implements FiltersListFra
             case EFFECTS:
 
                 if(Constants.isAdjustCameraImage){
-                    Constants.capturedImageBitmap = createBitmapFromLayout(adjustCameraPhotoRLayout);
                     cameraSelectedImageShape.setImageBitmap(Constants.capturedImageBitmap);
 
-                    adjustCameraRLayout.setVisibility(View.GONE);
                     cameraSelectedImageRLayout.setVisibility(View.VISIBLE);
-
                     blankCameraLayoutTop.setVisibility(View.VISIBLE);
-                    blankCameraLayoutBottom.setVisibility(View.VISIBLE);
+                    cameraBlankLayoutBottom.setVisibility(View.VISIBLE);
                     cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
                     cameraEffectsLLayout.setVisibility(View.GONE);
                     cameraSubToolsLayout.setVisibility(View.GONE);
@@ -839,8 +1602,6 @@ public class CameraActivity  extends AppCompatActivity implements FiltersListFra
                 }
 
                 cameraSelectedImageRLayout.setVisibility(View.VISIBLE);
-                adjustCameraRLayout.setVisibility(View.GONE);
-
                 cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
                 cameraSubToolsRecycler.setVisibility(View.GONE);
                 //Bitmap  bitmap  = createBitmapFromLayout(cameraSelectedImageRLayout);
@@ -849,17 +1610,45 @@ public class CameraActivity  extends AppCompatActivity implements FiltersListFra
                 setFiltersImage();
 
                 if(cameraEffectsLLayout.getVisibility() == View.VISIBLE ){
-                    blankCameraLayoutBottom.setVisibility(View.VISIBLE);
+                    cameraBlankLayoutBottom.setVisibility(View.VISIBLE);
                     cameraSubToolsLayout.setVisibility(View.GONE);
                     cameraEffectsLLayout.setVisibility(View.GONE);
                 }else {
-                    blankCameraLayoutBottom.setVisibility(View.GONE);
+                    cameraBlankLayoutBottom.setVisibility(View.GONE);
                     cameraSubToolsLayout.setVisibility(View.VISIBLE);
                     cameraEffectsLLayout.setVisibility(View.VISIBLE);
                 }
                 break;
 
             case ADJUST:
+                Constants.isAdjustSelected = true;
+                cameraAdjustToolsRecycler = (RecyclerView) findViewById(R.id.cameraAdjustToolsRecycler);
+                cameraAdjustToolsRecycler.setVisibility(View.GONE);
+                adjustToolsAdapter = new AdjustToolsAdapter(this);
+                mAdjustToolsAdapterLManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
+                cameraAdjustToolsRecycler.setLayoutManager(mAdjustToolsAdapterLManager);
+                cameraAdjustToolsRecycler.setAdapter(adjustToolsAdapter);
+                cameraBlankLayoutBottom.setVisibility(View.GONE);
+                cameraEditToolsRecycleView.setVisibility(View.GONE);
+                cameraSubToolsLayout.setVisibility(View.VISIBLE);
+                cameraBrightnessSeekBar.setVisibility(View.VISIBLE);
+                cameraContrastSeekBar.setVisibility(View.GONE);
+                cameraSaturationSeekBar.setVisibility(View.GONE);
+                cameraSharpnessSeekBar.setVisibility(View.GONE);
+                cameraVignetteSeekBar.setVisibility(View.GONE);
+                cameraShadowSeekBar.setVisibility(View.GONE);
+                cameraHighlightSeekBar.setVisibility(View.GONE);
+                cameraTempSeekBar.setVisibility(View.GONE);
+                cameraTintSeekBar.setVisibility(View.GONE);
+                cameraDenoiseSeekBar.setVisibility(View.GONE);
+                cameraCurveSeekBar.setVisibility(View.GONE);
+                cameraColorBalanceSeekBar.setVisibility(View.GONE);
+                cameraSubToolsRecycler.setVisibility(View.GONE);
+                cameraEffectsLLayout.setVisibility(View.GONE);
+                cameraAdjustToolsRecycler.setVisibility(View.VISIBLE);
+                cameraAdjustSeekbarLLayout.setVisibility(View.VISIBLE);
+
+
 
                 if (!Constants.isAdjustCameraImage) {
                     cameraSelectedImageShape.setLayoutParams(
@@ -868,21 +1657,13 @@ public class CameraActivity  extends AppCompatActivity implements FiltersListFra
                                     ViewGroup.LayoutParams.WRAP_CONTENT
                             ) );
                     cameraSelectedImageShape.setScaleType(ImageView.ScaleType.FIT_CENTER);
+
+                    addToUndoReodList();
+
                     Constants.capturedImageBitmap = ((BitmapDrawable) cameraSelectedImageShape.getDrawable()).getBitmap();
 
-                    adjustCameraPhotoView.setLayoutParams(
-                            new android.widget.RelativeLayout.LayoutParams(
-                                    ViewGroup.LayoutParams.WRAP_CONTENT,
-                                    ViewGroup.LayoutParams.WRAP_CONTENT
-                            ) );
-                    adjustCameraPhotoView.setScaleType(ImageView.ScaleType.FIT_XY);
-
-                    adjustCameraPhotoView.setImageBitmap(Constants.capturedImageBitmap);
-                    adjustCameraPhotoView.setRotation(0);
-                    fixAntiAlias(adjustCameraPhotoView);
-
-                    cameraSelectedImageRLayout.setVisibility(View.GONE);
-                    adjustCameraRLayout.setVisibility(View.VISIBLE);
+                    finalImage =  Constants.capturedImageBitmap;
+                    Constants.cameraOrignalBitmap = Constants.capturedImageBitmap;
 
                     Constants.isAdjustCameraImage = true;
 
@@ -894,21 +1675,26 @@ public class CameraActivity  extends AppCompatActivity implements FiltersListFra
                     cameraSelectedImageShape.setScaleType(ImageView.ScaleType.FIT_CENTER);
                 }
 
+                // keeping brightness value b/w -100 / +100
+                cameraBrightnessSeekBar.setMax(200);
+                cameraBrightnessSeekBar.setProgress(100);
 
-                cameraEffectsLLayout.setVisibility(View.GONE);
-                cameraSubToolsRecycler.setVisibility(View.GONE);
-                //Bitmap  bitmap  = createBitmapFromLayout(cameraSelectedImageRLayout);
-                Constants.capturedImageBitmap = ((BitmapDrawable) cameraSelectedImageShape.getDrawable()).getBitmap();
-                //addToUndoReodList();
-                if(cameraAdjustSeekbarLLayout.getVisibility() == View.VISIBLE ){
-                    blankCameraLayoutBottom.setVisibility(View.VISIBLE);
-                    cameraSubToolsLayout.setVisibility(View.GONE);
-                    cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
-                }else {
-                    blankCameraLayoutBottom.setVisibility(View.GONE);
-                    cameraSubToolsLayout.setVisibility(View.VISIBLE);
-                    cameraAdjustSeekbarLLayout.setVisibility(View.VISIBLE);
-                }
+//                cameraEffectsLLayout.setVisibility(View.GONE);
+//                cameraSubToolsRecycler.setVisibility(View.GONE);
+//                //Bitmap  bitmap  = createBitmapFromLayout(cameraSelectedImageRLayout);
+//                Constants.capturedImageBitmap = ((BitmapDrawable) cameraSelectedImageShape.getDrawable()).getBitmap();
+
+//                if(cameraAdjustSeekbarLLayout.getVisibility() == View.VISIBLE ){
+//                    cameraBlankLayoutBottom.setVisibility(View.VISIBLE);
+//                    cameraSubToolsLayout.setVisibility(View.GONE);
+//                    cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
+//                }else {
+//                    cameraBlankLayoutBottom.setVisibility(View.GONE);
+//                    cameraSubToolsLayout.setVisibility(View.VISIBLE);
+//                    cameraAdjustSeekbarLLayout.setVisibility(View.VISIBLE);
+//                }
+
+
                 break;
 
 
@@ -916,28 +1702,22 @@ public class CameraActivity  extends AppCompatActivity implements FiltersListFra
 
                 if(Constants.isAdjustCameraImage){
 
-                    Constants.capturedImageBitmap = createBitmapFromLayout(adjustCameraPhotoRLayout);
+                    //2608  Constants.capturedImageBitmap = createBitmapFromLayout(adjustCameraPhotoRLayout);
 
                     cameraSelectedImageShape.setImageBitmap(Constants.capturedImageBitmap);
 
-                    adjustCameraRLayout.setVisibility(View.GONE);
                     cameraSelectedImageRLayout.setVisibility(View.VISIBLE);
-
-                    blankCameraLayoutBottom.setVisibility(View.VISIBLE);
+                    cameraBlankLayoutBottom.setVisibility(View.VISIBLE);
                     cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
                     cameraEffectsLLayout.setVisibility(View.GONE);
                     cameraSubToolsLayout.setVisibility(View.GONE);
                     cameraSubToolsRecycler.setVisibility(View.GONE);
                     addToUndoReodList();
                     Constants.isAdjustCameraImage=false;
-
                 }
 
                 cameraSelectedImageRLayout.setVisibility(View.VISIBLE);
-                adjustCameraRLayout.setVisibility(View.GONE);
-
-
-                blankCameraLayoutBottom.setVisibility(View.VISIBLE);
+                cameraBlankLayoutBottom.setVisibility(View.VISIBLE);
                 cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
                 cameraEffectsLLayout.setVisibility(View.GONE);
                 cameraSubToolsLayout.setVisibility(View.GONE);
@@ -954,14 +1734,16 @@ public class CameraActivity  extends AppCompatActivity implements FiltersListFra
                 //Log.e("Width ", cameraSelectedImageShape.getWidth() + "");
                 //Log.e("Height ", cameraSelectedImageShape.getHeight() + "");
 
+
                 mMyPrecfence.saveString(Constants.INTENT_TYPE, Constants.INTENT_TYPE_CAMERA);
                 try {
                     //Bitmap mBitmap = createBitmapFromLayout(cameraSelectedImageRLayout);
 
                     Bitmap mBitmap = createBitmapFromLayout(cameraSelectedImageShape);
+
                     //ImageView End
-                    //Constants.galleryEditBitmapHeight  = cameraSelectedImageShape.getHeight();
-                    //Constants.galleryEditBitmapWidth  = cameraSelectedImageShape.getWidth();
+                    //Constants.cameraEditBitmapHeight  = cameraSelectedImageShape.getHeight();
+                    //Constants.cameraEditBitmapWidth  = cameraSelectedImageShape.getWidth();
 
                     String imagePath =  Utilities.saveBitmap_Temp(mBitmap);
                     File imgFile = new File(imagePath);
@@ -983,20 +1765,18 @@ public class CameraActivity  extends AppCompatActivity implements FiltersListFra
 
                     cameraSelectedImageShape.setScaleType(ImageView.ScaleType.FIT_CENTER);
 
-
-
                     Constants.capturedImageBitmap = ((BitmapDrawable)cameraSelectedImageShape.getDrawable()).getBitmap();
-                    //Constants.capturedImageBitmap =  createBitmapFromLayout(mGalleryRLayout);
+                    //Constants.capturedImageBitmap =  createBitmapFromLayout(mcameraRLayout);
 
                     Constants.cameraEditBitmap = Constants.capturedImageBitmap;
-                    //Bitmap layoutBitmap = createBitmapFromLayout(mGalleryRLayout);
+                    //Bitmap layoutBitmap = createBitmapFromLayout(mcameraRLayout);
                     Constants.cameraEditBitmapHeight  = Constants.cameraEditBitmap.getHeight();
                     Constants.cameraEditBitmapWidth  = Constants.cameraEditBitmap.getWidth();
 
                     //Bitmap layoutBitmap = createBitmapFromLayout(cameraSelectedImageShape);
-//                    Bitmap layoutBitmap = createBitmapFromLayout(mGalleryRLayout);
-//                    Constants.galleryEditBitmapHeight  = layoutBitmap.getHeight();
-//                    Constants.galleryEditBitmapWidth  = layoutBitmap.getWidth();
+//                    Bitmap layoutBitmap = createBitmapFromLayout(mcameraRLayout);
+//                    Constants.cameraEditBitmapHeight  = layoutBitmap.getHeight();
+//                    Constants.cameraEditBitmapWidth  = layoutBitmap.getWidth();
 
                     cameraSelectedImageShape.setLayoutParams(
                             new android.widget.RelativeLayout.LayoutParams(
@@ -1022,7 +1802,7 @@ public class CameraActivity  extends AppCompatActivity implements FiltersListFra
 
             case CAMERA_CROP:
 
-                blankCameraLayoutBottom.setVisibility(View.VISIBLE);
+                cameraBlankLayoutBottom.setVisibility(View.VISIBLE);
                 cameraAdjustSeekbarLLayout.setVisibility(View.GONE);
                 cameraEffectsLLayout.setVisibility(View.GONE);
                 cameraSubToolsLayout.setVisibility(View.GONE);
@@ -1071,40 +1851,6 @@ public class CameraActivity  extends AppCompatActivity implements FiltersListFra
     }
 
 
-    /************************Brightness / Contrast Start*******************/
-    @Override
-    public void onProgressChanged(SeekBar seekBar, int progress, boolean b) {
-        if (adjustCameraPhotoView != null) {
-            if (seekBar.getId() == R.id.cameraBrightness) {
-                increaseBrightness(adjustCameraPhotoView, progress);
-                progressBright = progress;
-            }
-            if (seekBar.getId() == R.id.cameraContrast) {
-                increaseContrast(adjustCameraPhotoView, progress);
-                progressContrast = progress;
-
-            }
-        }
-    }
-
-    @Override
-    public void onStartTrackingTouch(SeekBar seekBar) {
-    }
-    @Override
-    public void onStopTrackingTouch(SeekBar seekBar) {
-        //addToUndoReodList();
-    }
-
-    private void increaseBrightness(ImageView mImageView, int progressValue){
-        mImageView.setColorFilter(ColorFilterGenerator.adjustBrightness(progressValue));
-    }
-    private void increaseContrast(ImageView mImageView, int progressValue){
-        mImageView.setColorFilter(ColorFilterGenerator.adjustContrast(progressValue));
-    }
-
-
-    /************************Brightness / Contrast End*******************/
-
 
     /*****************Undo/Redo Start****************/
 
@@ -1150,10 +1896,10 @@ public class CameraActivity  extends AppCompatActivity implements FiltersListFra
 
             hideShowUndoRedo();
 
-            increaseBrightness(cameraSelectedImageShape, 0);
-            increaseContrast(cameraSelectedImageShape, 0);
-            cameraBrightness.setProgress(0);
-            cameraContrast.setProgress(0);
+//            increaseBrightness(cameraSelectedImageShape, 0);
+//            increaseContrast(cameraSelectedImageShape, 0);
+//            cameraBrightness.setProgress(0);
+//            cameraContrast.setProgress(0);
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -1194,10 +1940,10 @@ public class CameraActivity  extends AppCompatActivity implements FiltersListFra
 
             hideShowUndoRedo();
 
-            increaseBrightness(cameraSelectedImageShape, 0);
-            increaseContrast(cameraSelectedImageShape, 0);
-            cameraBrightness.setProgress(0);
-            cameraContrast.setProgress(0);
+//            increaseBrightness(cameraSelectedImageShape, 0);
+//            increaseContrast(cameraSelectedImageShape, 0);
+//            cameraBrightness.setProgress(0);
+//            cameraContrast.setProgress(0);
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -1265,13 +2011,29 @@ public class CameraActivity  extends AppCompatActivity implements FiltersListFra
 
     /*****************Undo/Redo End****************/
 
+    public Bitmap onAdjustFinalImage(){
+        cameraSelectedImageShape.setLayoutParams(
+                new android.widget.RelativeLayout.LayoutParams(
+                        ViewGroup.LayoutParams.WRAP_CONTENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT
+                ));
+        cameraSelectedImageShape.setScaleType(ImageView.ScaleType.FIT_CENTER);
 
+        Bitmap bitmap = ((BitmapDrawable) cameraSelectedImageShape.getDrawable()).getBitmap();
+
+        cameraSelectedImageShape.setLayoutParams(
+                new android.widget.RelativeLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT
+                ));
+        cameraSelectedImageShape.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        return bitmap;
+    }
     //Method to do flip action
     public  Bitmap flipImage(Bitmap image_bitmap) {
         Matrix matrix = new Matrix();
         matrix.preScale(-1.0f, 1.0f);
         Bitmap flipped_bitmap = Bitmap.createBitmap(image_bitmap, 0, 0, image_bitmap.getWidth(), image_bitmap.getHeight(), matrix, true);
-
         return flipped_bitmap;
     }
 
@@ -1596,6 +2358,86 @@ public class CameraActivity  extends AppCompatActivity implements FiltersListFra
     }
     /*************Compress Image End************/
 
+    public Bitmap applyTintEffect(Bitmap src, int degree) {
+        // get source image size
+        int width = src.getWidth();
+        int height = src.getHeight();
+
+        int[] pix = new int[width * height];
+        // get pixel array from source
+        src.getPixels(pix, 0, width, 0, 0, width, height);
+
+        int RY, GY, BY, RYY, GYY, BYY, R, G, B, Y;
+        double angle = (PI * (double)degree) / HALF_CIRCLE_DEGREE;
+
+        int S = (int)(RANGE * Math.sin(angle));
+        int C = (int)(RANGE * Math.cos(angle));
+
+        for (int y = 0; y < height; y++)
+            for (int x = 0; x < width; x++) {
+                int index = y * width + x;
+                int r = ( pix[index] >> 16 ) & 0xff;
+                int g = ( pix[index] >> 8 ) & 0xff;
+                int b = pix[index] & 0xff;
+                RY = ( 70 * r - 59 * g - 11 * b ) / 100;
+                GY = (-30 * r + 41 * g - 11 * b ) / 100;
+                BY = (-30 * r - 59 * g + 89 * b ) / 100;
+                Y  = ( 30 * r + 59 * g + 11 * b ) / 100;
+                RYY = ( S * BY + C * RY ) / 256;
+                BYY = ( C * BY - S * RY ) / 256;
+                GYY = (-51 * RYY - 19 * BYY ) / 100;
+                R = Y + RYY;
+                R = ( R < 0 ) ? 0 : (( R > 255 ) ? 255 : R );
+                G = Y + GYY;
+                G = ( G < 0 ) ? 0 : (( G > 255 ) ? 255 : G );
+                B = Y + BYY;
+                B = ( B < 0 ) ? 0 : (( B > 255 ) ? 255 : B );
+                pix[index] = 0xff000000 | (R << 16) | (G << 8 ) | B;
+            }
+        // output bitmap
+        Bitmap outBitmap = Bitmap.createBitmap(width, height, src.getConfig());
+        outBitmap.setPixels(pix, 0, width, 0, 0, width, height);
+
+        pix = null;
+
+        return outBitmap;
+    }
+
+    public static Bitmap onNoise(Bitmap source) {
+        final int COLOR_MAX = 0xFF;
+
+        // get image size
+        int width = source.getWidth();
+        int height = source.getHeight();
+        int[] pixels = new int[width * height];
+        // get pixel array from source
+        source.getPixels(pixels, 0, width, 0, 0, width, height);
+        // a random object
+        Random random = new Random();
+
+        int index = 0;
+        // iteration through pixels
+        for(int y = 0; y < height; ++y) {
+            for(int x = 0; x < width; ++x) {
+                // get current index in 2D-matrix
+                index = y * width + x;
+                // get random color
+                int randColor = Color.rgb(random.nextInt(COLOR_MAX),
+                        random.nextInt(COLOR_MAX), random.nextInt(COLOR_MAX));
+                // OR
+                pixels[index] |= randColor;
+            }
+        }
+        // output bitmap
+        Bitmap bmOut = Bitmap.createBitmap(width, height, source.getConfig());
+        bmOut.setPixels(pixels, 0, width, 0, 0, width, height);
+
+        source.recycle();
+        source = null;
+
+        return bmOut;
+    }
+
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         //finish();
@@ -1646,6 +2488,7 @@ public class CameraActivity  extends AppCompatActivity implements FiltersListFra
         int width = displayMetrics.heightPixels;
         return  width;
     }
+
 
 }
 
