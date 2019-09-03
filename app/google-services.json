@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "802486811379",
+    "firebase_url": "https://selfirpro.firebaseio.com",
+    "project_id": "selfirpro",
+    "storage_bucket": "selfirpro.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:802486811379:android:1f304b19f40f770c",
+        "android_client_info": {
+          "package_name": "com.mojodigi.selfiepro"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "802486811379-h0rhftpa29tin92iqbvlgs7k0ihlpe8f.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mojodigi.selfiepro",
+            "certificate_hash": "b3a6fb26021ca0754e02da747f5820c21e4b88f9"
+          }
+        },
+        {
+          "client_id": "802486811379-uceei09p6ce4s5tonvvg4p23sv8tavma.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDkUfAScrIeE45G9joVrOmn135tOgSRD1w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "802486811379-uceei09p6ce4s5tonvvg4p23sv8tavma.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
