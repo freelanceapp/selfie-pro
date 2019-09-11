@@ -1,6 +1,7 @@
 package com.mojodigi.selfiepro.application;
 
 import android.content.Context;
+import android.support.multidex.MultiDex;
 
 import com.facebook.ads.AudienceNetworkAds;
 import com.mojodigi.selfiepro.AddsUtility.AddConstants;
@@ -15,10 +16,17 @@ public class SelfieProApplication extends android.support.multidex.MultiDexAppli
     private static final String TAG = SelfieProApplication.class.getSimpleName();
 
     @Override
+    protected void attachBaseContext(Context base) {
+        super.attachBaseContext(base);
+        MultiDex.install(this);
+    }
+
+
+    @Override
     public void onCreate() {
         super.onCreate();
-        mSelfieProApplication = this;
 
+        mSelfieProApplication = SelfieProApplication.this;
 
         // MobileAds.initialize(this, "ca-app-pub-8509384168493764~9766841905"); //demo app id
         // MobileAds.initialize(this, getResources().getString(R.string.admob_app_id)); //actual app id

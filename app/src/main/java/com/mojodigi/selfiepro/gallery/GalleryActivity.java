@@ -1158,6 +1158,7 @@ public class GalleryActivity extends AppCompatActivity implements OnAdjustTollsS
                 galleryAdjustSeekbarLLayout.setVisibility(View.VISIBLE);
                 finalImage = onAdjustFinalImage();
                 break;
+
             case TINT:
                 addToUndoReodList();
                 galleryBlankLayoutBottom.setVisibility(View.GONE);
@@ -1183,6 +1184,8 @@ public class GalleryActivity extends AppCompatActivity implements OnAdjustTollsS
                 galleryEffectsLLayout.setVisibility(View.GONE);
                 finalImage = onAdjustFinalImage();
                 break;
+
+
             case DENOISE:
                 addToUndoReodList();
                 galleryBlankLayoutBottom.setVisibility(View.GONE);

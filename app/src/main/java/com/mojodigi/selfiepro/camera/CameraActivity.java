@@ -245,6 +245,7 @@ public class CameraActivity  extends AppCompatActivity implements OnAdjustTollsS
         Uri getedIntentUri = null;
         Intent extrasIntent = getIntent();
         if (extrasIntent != null) {
+
             getedIntentUri = extrasIntent.getParcelableExtra(Constants.URI_CAMERA);
 
             try {
@@ -304,6 +305,7 @@ public class CameraActivity  extends AppCompatActivity implements OnAdjustTollsS
             try {
                 bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), Constants.imageUri);
                 Constants.capturedImageBitmap = bitmap;
+
                 setFiltersImage();
 
                 cameraSelectedImageShape.setLayoutParams(
@@ -353,7 +355,7 @@ public class CameraActivity  extends AppCompatActivity implements OnAdjustTollsS
         cameraSelectedImageShape.setScaleType(ImageView.ScaleType.FIT_CENTER);
         Constants.cameraOrignalBitmap = Constants.capturedImageBitmap;
         cameraSelectedImageShape.setImageBitmap(Constants.capturedImageBitmap);
-        //cameraSelectedImageShape.setColorFilter(Utilities.setBrightness(110));
+        cameraSelectedImageShape.setColorFilter(Utilities.setBrightness(110));
         cameraSelectedImageShape.setOnClickListener(this);
         cameraSelectedImageShape.setRotation(0);
         fixAntiAlias(cameraSelectedImageShape);
@@ -420,7 +422,6 @@ public class CameraActivity  extends AppCompatActivity implements OnAdjustTollsS
 
         addToUndoReodList();
         hideShowUndoRedo();
-
 
         cameraBrightnessSeekBar = (SeekBar) findViewById(R.id.cameraBrightnessSeekBar);
         cameraBrightnessSeekBar.setVisibility(View.VISIBLE);
@@ -598,11 +599,8 @@ public class CameraActivity  extends AppCompatActivity implements OnAdjustTollsS
                 cameraAdjustToolsRecycler.setVisibility(View.GONE);
                 cameraEffectsLLayout.setVisibility(View.GONE);
 
-                cameraSelectedImageShape.setLayoutParams(
-                        new android.widget.RelativeLayout.LayoutParams(
-                                ViewGroup.LayoutParams.WRAP_CONTENT,
-                                ViewGroup.LayoutParams.WRAP_CONTENT
-                        ) );
+
+                cameraSelectedImageShape.setLayoutParams( new android.widget.RelativeLayout.LayoutParams( ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT ) );
                 cameraSelectedImageShape.setScaleType(ImageView.ScaleType.FIT_CENTER);
 
                 if(cameraSelectedImageShape.getRotation()>0){

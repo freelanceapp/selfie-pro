@@ -30,6 +30,7 @@ import com.mojodigi.selfiepro.AddsUtility.SharedPreferenceUtil;
 import com.mojodigi.selfiepro.R;
 import com.mojodigi.selfiepro.camera.CameraActivity;
 import com.mojodigi.selfiepro.collage.CollageActivity;
+import com.mojodigi.selfiepro.faceFilter.FaceFilterActivity;
 import com.mojodigi.selfiepro.gallery.GalleryActivity;
 import com.mojodigi.selfiepro.permission.PermissionsActivity;
 import com.mojodigi.selfiepro.utils.Constants;
@@ -162,9 +163,14 @@ public class HomeActivity extends PermissionsActivity implements View.OnClickLis
             case R.id.cameraImgView:
                 if(mMyPrecfence!=null)
                     mMyPrecfence.saveString(Constants.INTENT_TYPE, Constants.INTENT_TYPE_CAMERA);
-                if(getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA)){
-                    sendTakePictureIntent();
+              if(getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA)){
+                Intent intentPhotoCamera  = new Intent(HomeActivity.this, FaceFilterActivity.class);
+                startActivity(intentPhotoCamera);
+//                    sendTakePictureIntent();
                 }
+//                Intent intentPhotoCamera  = new Intent(HomeActivity.this, FaceFilterActivity.class);
+//                startActivity(intentPhotoCamera);
+
                 break;
 
             case R.id.galleryImgView:
@@ -422,6 +428,7 @@ public class HomeActivity extends PermissionsActivity implements View.OnClickLis
                     Log.e("Home File Path" , pictureFilePath);
                     if(imgFile.exists()) {
                         Constants.imageUri = Uri.fromFile(imgFile);
+
                         Constants.cameraImageUri = imgFile.getAbsolutePath();
                         Intent intentPhotoCamera  = new Intent(HomeActivity.this, CameraActivity.class);
                         intentPhotoCamera.putExtra(Constants.URI_CAMERA,  Constants.imageUri);

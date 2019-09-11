@@ -2,6 +2,7 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 28
+    buildToolsVersion "29.0.2"
     defaultConfig {
         applicationId "com.mojodigi.selfiepro"
         minSdkVersion 19
@@ -9,6 +10,9 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
+        vectorDrawables.useSupportLibrary = true
+
     }
 
     buildTypes {
@@ -65,13 +69,13 @@ dependencies {
     implementation 'com.facebook.android:audience-network-sdk:5.4.1'
 
     // fireabse analytics
-    implementation 'com.google.firebase:firebase-core:16.0.7'
+     implementation 'com.google.firebase:firebase-core:16.0.7'
 
     // firebase push notifications
-    implementation 'com.google.firebase:firebase-messaging:17.3.4'
+     implementation 'com.google.firebase:firebase-messaging:17.3.4'
 
     // fireabse Crashlytics
-    implementation 'com.crashlytics.sdk.android:crashlytics:2.9.9'
+     implementation 'com.crashlytics.sdk.android:crashlytics:2.9.9'
 
     // Appmetrica SDK dependency .
     implementation 'com.yandex.android:mobmetricalib:3.5.3'
@@ -82,7 +86,11 @@ dependencies {
 
 
     implementation 'net.alhazmy13.ImageFilters:library:0.1.2-beta'
-}
 
+    //implementation 'com.google.android.gms:play-services-vision:9.4.0+'
+    //implementation 'com.google.android.gms:play-services-vision:11.8.0'
+    implementation 'com.google.android.gms:play-services-vision:17.0.2+'
+
+}
 
 apply plugin: 'com.google.gms.google-services'

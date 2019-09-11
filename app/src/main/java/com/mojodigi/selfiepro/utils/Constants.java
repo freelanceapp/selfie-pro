@@ -7,6 +7,7 @@ import android.widget.ImageView;
 
 public class Constants {
 
+    public static Bitmap faceStickerSelected = null;
     public static String imageUriOnBack = null;
 
     public static String capturedImagePath = "";
